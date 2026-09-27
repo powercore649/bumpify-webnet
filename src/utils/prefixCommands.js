@@ -9,7 +9,8 @@
 // Garanties :
 //   • les commandes à modals/menus/choix fixes refusées proprement (pas un flux
 //     reproductible en message texte)
-//   • réponses éphémères converties en MP (repli : salon courant)
+//   • toutes les réponses sont postées dans le salon, jamais en MP — même pour
+//     les commandes qui demandent une réponse éphémère
 //   • permissions, isOwner, cooldowns et logs s'appliquent à l'identique
 const { EmbedBuilder, MessageFlags } = require('discord.js');
 const PrefixConfig = require('../models/PrefixConfig');
@@ -182,13 +183,9 @@ function makeFakeInteraction({ message, client, cfg, commandName, groupName, sub
     return { ...payload, embeds: [...(payload.embeds || []), embed] };
   };
 
-  const send = async (payload, { ephemeral }) => {
-    if (guildId && ephemeral) {
-      const dm = await message.author.send(payload).catch(() => null);
-      if (dm) return dm;
-    }
-    return message.channel.send(payload).catch(() => null);
-  };
+  // Toujours dans le salon : une réponse de commande préfixée n'est jamais
+  // envoyée en MP, même si la commande demandait une réponse éphémère.
+  const send = async (payload) => message.channel.send(payload).catch(() => null);
 
   const interaction = {
     id: `prefix_${message.id}`,
@@ -264,7 +261,7 @@ function makeFakeInteraction({ message, client, cfg, commandName, groupName, sub
       deferred = true; replied = true;
       interaction.deferred = true; interaction.replied = true;
       interaction.ephemeral = ephemeral ? 'ephemeral' : false;
-      replyTarget = await send(withHint(payload), { ephemeral });
+      replyTarget = await send(withHint(payload));
       return replyTarget;
     },
 
@@ -281,20 +278,20 @@ function makeFakeInteraction({ message, client, cfg, commandName, groupName, sub
 
     async editReply(payload = {}) {
       if (replyTarget) return replyTarget.edit(payload).catch(() => null);
-      // defer éphémère (ou defer avant tout envoi) : on poste maintenant
-      replyTarget = await send(payload, { ephemeral: interaction.ephemeral === 'ephemeral' });
+      // defer sans envoi préalable : on poste maintenant
+      replyTarget = await send(payload);
       interaction.replied = true;
       return replyTarget;
     },
 
     async followUp(payload = {}) {
       if (!replyTarget && !interaction.replied) {
-        const sent = await send(withHint(payload), { ephemeral: payload?.ephemeral === true });
+        const sent = await send(withHint(payload));
         interaction.replied = true;
         replyTarget = sent;
         return sent;
       }
-      return send(payload, { ephemeral: false });
+      return send(payload);
     },
 
     async showModal() { throw new Error('PREFIX_MODAL_UNSUPPORTED'); },

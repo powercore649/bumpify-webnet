@@ -44,7 +44,7 @@ function buildPanelEmbed(cfg, guild) {
       {
         name: '📌 Bon à savoir',
         value: [
-          '• Les réponses **éphémères** sont envoyées **en message privé** (repli : salon courant).',
+          '• Toutes les réponses sont envoyées **dans le salon** (jamais en MP).',
           '• Les commandes à **menu déroulant/modal** ou **choix fixes** restent en slash uniquement.',
           '• Commandes owner du bot : slash uniquement.',
           '• Permissions, cooldowns et logs s\'appliquent à l\'identique.',
@@ -98,7 +98,7 @@ module.exports = {
           '',
           '**Exemple** — `b!ban @raideur spam` fait exactement comme `/ban`.',
           '',
-          '**Réponses éphémères** — envoyées en MP (repli : salon courant).',
+          '**Réponses** — toujours postées dans le salon, même pour les commandes « éphémères » en slash.',
           '**Non disponibles en préfixe** — modals, menus déroulants, options à choix fixes, commandes owner.',
           '',
           'Config : `/prefix panel`',

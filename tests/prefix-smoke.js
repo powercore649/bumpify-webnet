@@ -177,10 +177,10 @@ async function testFakeInteraction() {
   check('isChatInputCommand', fake.isChatInputCommand() === true);
   check('inGuild', fake.inGuild() === true);
 
-  // reply éphémère → MP
+  // reply « éphémère » → salon (jamais de MP en préfixe)
   await fake.reply({ content: 'secret', ephemeral: true });
-  check('reply éphémère → MP', dmSent.length === 1 && dmSent[0].content === 'secret', JSON.stringify(dmSent));
-  check('reply ajoute l\'indice préfixe', dmSent[0].embeds?.length === 1);
+  check('reply éphémère → salon (pas de MP)', dmSent.length === 0 && sent.some(p => p.content === 'secret'), JSON.stringify({ sent: sent.length, dmSent: dmSent.length }));
+  check('reply ajoute l\'indice préfixe', sent[0]?.embeds?.length === 1);
 
   // double reply → erreur
   let threw = false;
@@ -194,7 +194,7 @@ async function testFakeInteraction() {
   });
   await fake2.deferReply({ ephemeral: true });
   await fake2.editReply({ content: 'après defer' });
-  check('defer éphémère puis editReply → MP', dmSent.length === 2 && dmSent[1].content === 'après defer');
+  check('defer éphémère puis editReply → salon', dmSent.length === 0 && sent.some(p => p.content === 'après defer'));
   check('deferReply suit le pattern discord.js', fake2.deferred === true);
 
   // followUp public
