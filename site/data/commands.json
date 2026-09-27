@@ -1,0 +1,2403 @@
+{
+  "generatedAt": "2026-09-27T17:26:16.119Z",
+  "total": 104,
+  "categories": [
+    {
+      "label": "Bump & Réseau",
+      "emoji": "🚀",
+      "color": "#5865F2",
+      "desc": "Faites connaître votre serveur à travers tout le réseau Bumpify.",
+      "key": "bump-reseau",
+      "count": 14,
+      "commands": [
+        {
+          "name": "boost",
+          "description": "💎 Configurer le message envoyé quand un membre booste le serveur",
+          "category": "bump-reseau",
+          "file": "src/commands/bump-reseau/boost.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "bump",
+          "description": "Bumpez votre serveur dans le réseau Bumpify !",
+          "category": "bump-reseau",
+          "file": "src/commands/bump-reseau/bump.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "bump-historique",
+          "description": "📜 Consultez l'historique complet de vos bumps",
+          "category": "bump-reseau",
+          "file": "src/commands/bump-reseau/bump-historique.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "bump-notif",
+          "description": "🔔 Configurer les notifications de rappel de bump",
+          "category": "bump-reseau",
+          "file": "src/commands/bump-reseau/bump-notif.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "bumpadmin",
+          "description": "🔧 Administration du réseau bump (Owners uniquement)",
+          "category": "bump-reseau",
+          "file": "src/commands/bump-reseau/bumpadmin.js",
+          "defaultMemberPermissions": "8",
+          "subcommands": [
+            {
+              "name": "blacklist guild_id",
+              "description": "ID du serveur",
+              "options": []
+            },
+            {
+              "name": "blacklist blacklist",
+              "description": "true=blacklister, false=retirer",
+              "options": []
+            },
+            {
+              "name": "blacklist raison",
+              "description": "Raison",
+              "options": []
+            },
+            {
+              "name": "featured guild_id",
+              "description": "ID du serveur",
+              "options": []
+            },
+            {
+              "name": "featured jours",
+              "description": "Durée en jours (0 = retirer)",
+              "options": []
+            },
+            {
+              "name": "reset_bumps guild_id",
+              "description": "ID du serveur",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "interserveur",
+          "description": "🌐 Gérer le système de chat inter-serveur",
+          "category": "bump-reseau",
+          "file": "src/commands/bump-reseau/interserveur.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "leaderboard",
+          "description": "🏆 Classements du serveur",
+          "category": "bump-reseau",
+          "file": "src/commands/bump-reseau/leaderboard.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": [
+            {
+              "name": "type",
+              "description": "Type de classement",
+              "required": false,
+              "choices": [
+                "💰 Richesse (coins)",
+                "🚀 Bumps totaux",
+                "📅 Bumps cette semaine"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "network",
+          "description": "🌐 Statistiques globales du réseau Bumpify",
+          "category": "bump-reseau",
+          "file": "src/commands/bump-reseau/network.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "stats",
+          "description": "📊 Statistiques de bumps",
+          "category": "bump-reseau",
+          "file": "src/commands/bump-reseau/stats.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [
+            {
+              "name": "utilisateur user",
+              "description": "Utilisateur (vous par défaut)",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "streamalerts",
+          "description": "📡 Alertes Twitch (live) & YouTube (nouvelles vidéos)",
+          "category": "bump-reseau",
+          "file": "src/commands/bump-reseau/streamalerts.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [
+            {
+              "name": "ajouter-twitch pseudo",
+              "description": "Nom d'utilisateur Twitch",
+              "options": []
+            },
+            {
+              "name": "ajouter-twitch salon",
+              "description": "Salon où poster l'alerte",
+              "options": []
+            },
+            {
+              "name": "ajouter-twitch role",
+              "description": "Rôle à mentionner (optionnel)",
+              "options": []
+            },
+            {
+              "name": "ajouter-youtube chaine",
+              "description": "URL, @handle ou ID de la chaîne",
+              "options": []
+            },
+            {
+              "name": "ajouter-youtube salon",
+              "description": "Salon où poster l'alerte",
+              "options": []
+            },
+            {
+              "name": "ajouter-youtube role",
+              "description": "Rôle à mentionner (optionnel)",
+              "options": []
+            },
+            {
+              "name": "supprimer plateforme",
+              "description": "Plateforme",
+              "options": []
+            },
+            {
+              "name": "supprimer identifiant",
+              "description": "Pseudo Twitch ou ID/handle YouTube",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "streams",
+          "description": "📺 Gérer les streamers Twitch / chaînes YouTube suivis",
+          "category": "bump-reseau",
+          "file": "src/commands/bump-reseau/streams.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [
+            {
+              "name": "ajouter plateforme",
+              "description": "Twitch ou YouTube",
+              "options": []
+            },
+            {
+              "name": "ajouter identifiant",
+              "description": "Login Twitch (ex: ninja) ou ID de chaîne YouTube (commence par UC...)",
+              "options": []
+            },
+            {
+              "name": "retirer plateforme",
+              "description": "Twitch ou YouTube",
+              "options": []
+            },
+            {
+              "name": "retirer identifiant",
+              "description": "Login Twitch ou ID de chaîne YouTube",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "territoires",
+          "description": "🗺️ Guerre de territoires inter-serveurs — exclusif Bumpify !",
+          "category": "bump-reseau",
+          "file": "src/commands/bump-reseau/territoires.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [
+            {
+              "name": "zone id",
+              "description": "ID de la zone (ex: A1, C3)",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "topserveurs",
+          "description": "🏆 Classement des serveurs du réseau Bumpify",
+          "category": "bump-reseau",
+          "file": "src/commands/bump-reseau/topserveurs.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": [
+            {
+              "name": "filtre",
+              "description": "Type de classement",
+              "required": false,
+              "choices": [
+                "🌍 Tous",
+                "📅 Hebdomadaire",
+                "⭐ Mis en avant",
+                "👍 Plus votés"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "twitch",
+          "description": "🟣 Explorer Twitch — streams en direct, recherche, fiche streamer",
+          "category": "bump-reseau",
+          "file": "src/commands/bump-reseau/twitch.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [
+            {
+              "name": "top jeu",
+              "description": "Filtrer par jeu/catégorie (ex: Valorant, Just Chatting...)",
+              "options": []
+            },
+            {
+              "name": "search nom",
+              "description": "Nom de la chaîne à rechercher",
+              "options": []
+            },
+            {
+              "name": "chaine pseudo",
+              "description": "Pseudo Twitch exact (login)",
+              "options": []
+            }
+          ],
+          "options": []
+        }
+      ]
+    },
+    {
+      "label": "Modération",
+      "emoji": "🛡️",
+      "color": "#ED4245",
+      "desc": "Sanctions, anti-raid, logs et protection du serveur.",
+      "key": "moderation",
+      "count": 15,
+      "commands": [
+        {
+          "name": "antiscam",
+          "description": "🛡️ Configurer le système anti-arnaque par image",
+          "category": "moderation",
+          "file": "src/commands/moderation/antiscam.js",
+          "defaultMemberPermissions": "8",
+          "subcommands": [
+            {
+              "name": "activer etat",
+              "description": "Activé ?",
+              "options": []
+            },
+            {
+              "name": "salon salon",
+              "description": "Salon des alertes",
+              "options": []
+            },
+            {
+              "name": "seuil valeur",
+              "description": "0 à 100",
+              "options": []
+            },
+            {
+              "name": "action type",
+              "description": "Action",
+              "options": []
+            },
+            {
+              "name": "action duree_mute",
+              "description": "Durée du mute en minutes (si action = mute)",
+              "options": []
+            },
+            {
+              "name": "supprimer-message etat",
+              "description": "Supprimer ?",
+              "options": []
+            },
+            {
+              "name": "categories crypto",
+              "description": "Crypto / faux giveaways",
+              "options": []
+            },
+            {
+              "name": "categories urgence",
+              "description": "Incitation à l'action / urgence",
+              "options": []
+            },
+            {
+              "name": "categories usurpation",
+              "description": "Usurpation de marque connue",
+              "options": []
+            },
+            {
+              "name": "categories financier",
+              "description": "Retrait / transfert financier suspect",
+              "options": []
+            },
+            {
+              "name": "mot-cle action",
+              "description": "Ajouter ou retirer",
+              "options": []
+            },
+            {
+              "name": "mot-cle mot",
+              "description": "Le mot-clé",
+              "options": []
+            },
+            {
+              "name": "exempter-role role",
+              "description": "Rôle à exempter",
+              "options": []
+            },
+            {
+              "name": "exempter-role retirer",
+              "description": "Retirer cette exemption ?",
+              "options": []
+            },
+            {
+              "name": "exempter-salon salon",
+              "description": "Salon à exempter",
+              "options": []
+            },
+            {
+              "name": "exempter-salon retirer",
+              "description": "Retirer cette exemption ?",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "automod",
+          "description": "🛡️ Auto-modération : anti-spam, anti-liens, anti-majuscules",
+          "category": "moderation",
+          "file": "src/commands/moderation/automod.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [
+            {
+              "name": "exempter role",
+              "description": "Rôle à exempter",
+              "options": []
+            },
+            {
+              "name": "exempter salon",
+              "description": "Salon à exempter",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "honeypot",
+          "description": "🍯 Configurer le salon piège anti-bot / anti-token-grabber",
+          "category": "moderation",
+          "file": "src/commands/moderation/honeypot.js",
+          "defaultMemberPermissions": "8",
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "kick",
+          "description": "👢 Expulser un utilisateur du serveur",
+          "category": "moderation",
+          "file": "src/commands/moderation/kick.js",
+          "defaultMemberPermissions": "2",
+          "subcommands": [],
+          "options": [
+            {
+              "name": "user",
+              "description": "Utilisateur à expulser",
+              "required": true
+            },
+            {
+              "name": "reason",
+              "description": "Raison",
+              "required": false
+            }
+          ]
+        },
+        {
+          "name": "modlog",
+          "description": "📜 Configure les logs de modération (arrivées, départs…)",
+          "category": "moderation",
+          "file": "src/commands/moderation/modlog.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [
+            {
+              "name": "salon salon",
+              "description": "Salon texte des logs",
+              "options": []
+            },
+            {
+              "name": "evenement evenement",
+              "description": "Événement à configurer",
+              "options": []
+            },
+            {
+              "name": "evenement etat",
+              "description": "Événement activé ?",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "modmail",
+          "description": "📬 Système de ModMail — Messages privés vers le staff",
+          "category": "moderation",
+          "file": "src/commands/moderation/modmail.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [
+            {
+              "name": "fermer raison",
+              "description": "Raison de la fermeture",
+              "options": []
+            },
+            {
+              "name": "repondre message",
+              "description": "Votre réponse",
+              "options": []
+            },
+            {
+              "name": "repondre anonyme",
+              "description": "Envoyer anonymement ?",
+              "options": []
+            },
+            {
+              "name": "snippet action",
+              "description": "Action",
+              "options": []
+            },
+            {
+              "name": "snippet nom",
+              "description": "Nom du snippet",
+              "options": []
+            },
+            {
+              "name": "snippet contenu",
+              "description": "Contenu du snippet",
+              "options": []
+            },
+            {
+              "name": "blacklist utilisateur",
+              "description": "Utilisateur",
+              "options": []
+            },
+            {
+              "name": "blacklist raison",
+              "description": "Raison",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "note",
+          "description": "📝 Gérer les notes sur les membres",
+          "category": "moderation",
+          "file": "src/commands/moderation/note.js",
+          "defaultMemberPermissions": "1099511627776",
+          "subcommands": [
+            {
+              "name": "ajouter membre",
+              "description": "Membre",
+              "options": []
+            },
+            {
+              "name": "ajouter note",
+              "description": "Contenu de la note",
+              "options": []
+            },
+            {
+              "name": "voir membre",
+              "description": "Membre",
+              "options": []
+            },
+            {
+              "name": "supprimer membre",
+              "description": "Membre",
+              "options": []
+            },
+            {
+              "name": "supprimer index",
+              "description": "Numéro de la note (voir /note voir)",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "raidautoconfig",
+          "description": "🚨 Configurer le déclenchement automatique du mode raid",
+          "category": "moderation",
+          "file": "src/commands/moderation/raidautoconfig.js",
+          "defaultMemberPermissions": "8",
+          "subcommands": [
+            {
+              "name": "config auto_declencheur",
+              "description": "Activer le déclenchement automatique (utilise le seuil de /automod raid)",
+              "options": []
+            },
+            {
+              "name": "config age_min_compte",
+              "description": "Âge minimum du compte en jours (0 = désactivé)",
+              "options": []
+            },
+            {
+              "name": "config action",
+              "description": "Action appliquée lors du déclenchement automatique",
+              "options": []
+            },
+            {
+              "name": "config auto_desactivation_min",
+              "description": "Désactivation automatique après N minutes (0 = désactivé)",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "raidmode",
+          "description": "🚨 Activer/désactiver le mode anti-raid d'urgence (verrouille tout)",
+          "category": "moderation",
+          "file": "src/commands/moderation/raidmode.js",
+          "defaultMemberPermissions": "8",
+          "subcommands": [],
+          "options": [
+            {
+              "name": "activer",
+              "description": "Activer (true) ou désactiver (false)",
+              "required": true
+            }
+          ]
+        },
+        {
+          "name": "sanction",
+          "description": "⚖️ Système de sanctions graduées (strikes)",
+          "category": "moderation",
+          "file": "src/commands/moderation/sanction.js",
+          "defaultMemberPermissions": "1099511627776",
+          "subcommands": [
+            {
+              "name": "ajouter membre",
+              "description": "Membre",
+              "options": []
+            },
+            {
+              "name": "ajouter raison",
+              "description": "Raison du strike",
+              "options": []
+            },
+            {
+              "name": "voir membre",
+              "description": "Membre",
+              "options": []
+            },
+            {
+              "name": "reset membre",
+              "description": "Membre",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "securite",
+          "description": "🛡️ Ouvre le panneau de sécurité interactif de Bumpify",
+          "category": "moderation",
+          "file": "src/commands/moderation/securite.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "slowmode",
+          "description": "⏱️ Définir le slowmode d'un salon",
+          "category": "moderation",
+          "file": "src/commands/moderation/slowmode.js",
+          "defaultMemberPermissions": "16",
+          "subcommands": [],
+          "options": [
+            {
+              "name": "secondes",
+              "description": "Durée en secondes (0 = désactiver)",
+              "required": true
+            },
+            {
+              "name": "salon",
+              "description": "Salon (actuel par défaut)",
+              "required": false
+            }
+          ]
+        },
+        {
+          "name": "snipe",
+          "description": "👻 Voir le dernier message supprimé dans ce salon",
+          "category": "moderation",
+          "file": "src/commands/moderation/snipe.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "warn",
+          "description": "⚠️ Avertir un utilisateur",
+          "category": "moderation",
+          "file": "src/commands/moderation/warn.js",
+          "defaultMemberPermissions": "1099511627776",
+          "subcommands": [],
+          "options": [
+            {
+              "name": "user",
+              "description": "Utilisateur",
+              "required": true
+            },
+            {
+              "name": "reason",
+              "description": "Raison",
+              "required": false
+            }
+          ]
+        },
+        {
+          "name": "warnconfig",
+          "description": "⚠️ Configurer les paliers d'avertissements (action automatique à N warns)",
+          "category": "moderation",
+          "file": "src/commands/moderation/warnconfig.js",
+          "defaultMemberPermissions": "1099511627776",
+          "subcommands": [
+            {
+              "name": "ajouter seuil",
+              "description": "Nombre d'avertissements déclenchant l'action",
+              "options": []
+            },
+            {
+              "name": "ajouter action",
+              "description": "Action à appliquer",
+              "options": []
+            },
+            {
+              "name": "ajouter duree",
+              "description": "Durée du mute en minutes (uniquement pour action = mute, 0 = défaut)",
+              "options": []
+            },
+            {
+              "name": "retirer seuil",
+              "description": "Seuil à retirer",
+              "options": []
+            }
+          ],
+          "options": []
+        }
+      ]
+    },
+    {
+      "label": "Configuration",
+      "emoji": "⚙️",
+      "color": "#99AAB5",
+      "desc": "Tout ce qu'il faut pour mettre Bumpify à votre image.",
+      "key": "configuration",
+      "count": 24,
+      "commands": [
+        {
+          "name": "anniversaire-config",
+          "description": "🎂 Ouvrir le panneau de configuration des anniversaires",
+          "category": "configuration",
+          "file": "src/commands/configuration/anniversaire-config.js",
+          "defaultMemberPermissions": "8",
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "autorole",
+          "description": "🎭 Rôles automatiques (arrivée, récompenses de bump)",
+          "category": "configuration",
+          "file": "src/commands/configuration/autorole.js",
+          "defaultMemberPermissions": "268435456",
+          "subcommands": [
+            {
+              "name": "ajouter role",
+              "description": "Rôle à attribuer automatiquement",
+              "options": []
+            },
+            {
+              "name": "ajouter type",
+              "description": "Quand attribuer ce rôle ?",
+              "options": []
+            },
+            {
+              "name": "ajouter bumps",
+              "description": "Nombre de bumps requis (type \"bump\" uniquement)",
+              "options": []
+            },
+            {
+              "name": "retirer role",
+              "description": "Rôle à retirer",
+              "options": []
+            },
+            {
+              "name": "basculer role",
+              "description": "Rôle concerné",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "autothread",
+          "description": "🧵 Gestion de l'auto-thread avancé",
+          "category": "configuration",
+          "file": "src/commands/configuration/autothread.js",
+          "defaultMemberPermissions": "16",
+          "subcommands": [
+            {
+              "name": "toggle activer",
+              "description": "Activer ?",
+              "options": []
+            },
+            {
+              "name": "include-ajouter salon",
+              "description": "Salon",
+              "options": []
+            },
+            {
+              "name": "include-retirer salon",
+              "description": "Salon",
+              "options": []
+            },
+            {
+              "name": "exclude-ajouter salon",
+              "description": "Salon",
+              "options": []
+            },
+            {
+              "name": "exclude-retirer salon",
+              "description": "Salon",
+              "options": []
+            },
+            {
+              "name": "nom-modele modele",
+              "description": "Modèle, ex: Discussion de {username}",
+              "options": []
+            },
+            {
+              "name": "archivage duree",
+              "description": "Durée",
+              "options": []
+            },
+            {
+              "name": "slowmode secondes",
+              "description": "Secondes (0 = désactivé)",
+              "options": []
+            },
+            {
+              "name": "premier-message activer",
+              "description": "Activer ?",
+              "options": []
+            },
+            {
+              "name": "role-restreint role",
+              "description": "Rôle requis (laisser vide pour effacer)",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "avis-panel",
+          "description": "⚙️ Panel de configuration avancé du système d'avis (staff)",
+          "category": "configuration",
+          "file": "src/commands/configuration/avis-panel.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "botwatch",
+          "description": "🤖 Panel interactif de configuration de la surveillance de bots",
+          "category": "configuration",
+          "file": "src/commands/configuration/botwatch.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "captcha",
+          "description": "🔒 Configurer le système de vérification Captcha",
+          "category": "configuration",
+          "file": "src/commands/configuration/captcha.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "config",
+          "description": "⚙️ Ouvrir le panel de configuration Bumpify",
+          "category": "configuration",
+          "file": "src/commands/configuration/config.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "counting-panel",
+          "description": "🔢 Système de Counting Game — configuration",
+          "category": "configuration",
+          "file": "src/commands/configuration/counting-panel.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [
+            {
+              "name": "setup salon",
+              "description": "Salon dédié au comptage",
+              "options": []
+            },
+            {
+              "name": "setup depart",
+              "description": "Nombre de départ (défaut : 0)",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "demande-mp",
+          "description": "💌 Configurer le système de demande de MP",
+          "category": "configuration",
+          "file": "src/commands/configuration/demande-mp.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "faq",
+          "description": "❓ Questions fréquentes du serveur",
+          "category": "configuration",
+          "file": "src/commands/configuration/faq.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [
+            {
+              "name": "ajouter question",
+              "description": "Question",
+              "options": []
+            },
+            {
+              "name": "ajouter réponse",
+              "description": "Réponse",
+              "options": []
+            },
+            {
+              "name": "supprimer id",
+              "description": "ID de la FAQ",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "farewell-set",
+          "description": "👋 Configurer le message d'au revoir",
+          "category": "configuration",
+          "file": "src/commands/configuration/farewell-set.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [
+            {
+              "name": "enable channel",
+              "description": "Salon",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "forumwelcome",
+          "description": "🗂️ Message d'accueil automatique pour les salons Forum",
+          "category": "configuration",
+          "file": "src/commands/configuration/forumwelcome.js",
+          "defaultMemberPermissions": "16",
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "invites-config",
+          "description": "⚙️ Configurer le système d'invitations avancé",
+          "category": "configuration",
+          "file": "src/commands/configuration/invites-config.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [
+            {
+              "name": "activer etat",
+              "description": "true = activé, false = désactivé",
+              "options": []
+            },
+            {
+              "name": "salon salon",
+              "description": "Salon texte",
+              "options": []
+            },
+            {
+              "name": "annonces join",
+              "description": "Annoncer les arrivées",
+              "options": []
+            },
+            {
+              "name": "annonces leave",
+              "description": "Annoncer les départs",
+              "options": []
+            },
+            {
+              "name": "message-join texte",
+              "description": "Placeholders: {user} {server} {inviter} {inviterTag} {code} {totalInvites}",
+              "options": []
+            },
+            {
+              "name": "message-join-inconnu texte",
+              "description": "Placeholders: {user} {server}",
+              "options": []
+            },
+            {
+              "name": "message-leave texte",
+              "description": "Placeholders: {user} {server} {inviter} {inviterTag} {code}",
+              "options": []
+            },
+            {
+              "name": "anti-fake jours",
+              "description": "0 = désactivé",
+              "options": []
+            },
+            {
+              "name": "ignorer-ajouter code",
+              "description": "Code d'invitation (ex: aBcD1e)",
+              "options": []
+            },
+            {
+              "name": "ignorer-retirer code",
+              "description": "Code d'invitation",
+              "options": []
+            },
+            {
+              "name": "role-ajouter role",
+              "description": "Rôle à donner",
+              "options": []
+            },
+            {
+              "name": "role-ajouter seuil",
+              "description": "Nombre d'invitations requises",
+              "options": []
+            },
+            {
+              "name": "role-retirer role",
+              "description": "Rôle à retirer de la config",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "leaderboardconfig",
+          "description": "⚙️ Configurer le classement automatique du serveur",
+          "category": "configuration",
+          "file": "src/commands/configuration/leaderboardconfig.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [
+            {
+              "name": "type valeur",
+              "description": "Type de classement",
+              "options": []
+            },
+            {
+              "name": "auto-post activer",
+              "description": "Activer (true) ou désactiver (false)",
+              "options": []
+            },
+            {
+              "name": "auto-post salon",
+              "description": "Salon où publier le classement",
+              "options": []
+            },
+            {
+              "name": "auto-post cron",
+              "description": "Expression cron (ex: \"0 12 * * *\" = tous les jours à 12h)",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "leveling",
+          "description": "📊 Configurer le système de niveaux (XP)",
+          "category": "configuration",
+          "file": "src/commands/configuration/leveling.js",
+          "defaultMemberPermissions": "8",
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "notifications",
+          "description": "🔔 Gérer les notifications du serveur",
+          "category": "configuration",
+          "file": "src/commands/configuration/notifications.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "onboarding",
+          "description": "🚪 Panel du portail d'accès (onboarding des nouveaux membres)",
+          "category": "configuration",
+          "file": "src/commands/configuration/onboarding.js",
+          "defaultMemberPermissions": "268435488",
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "panel",
+          "description": "⚙️ Panel de configuration central de Bumpify",
+          "category": "configuration",
+          "file": "src/commands/configuration/panel.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "partenariat-config",
+          "description": "⚙️ Configurer les annonces automatiques de partenariat",
+          "category": "configuration",
+          "file": "src/commands/configuration/partenariat-config.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [
+            {
+              "name": "definir salon",
+              "description": "Salon où poster les annonces de partenariat",
+              "options": []
+            },
+            {
+              "name": "definir salon_soumission",
+              "description": "Salon surveillé : poster un lien d'invite ici déclenche l'annonce automatiquement",
+              "options": []
+            },
+            {
+              "name": "definir titre",
+              "description": "Titre de l'embed",
+              "options": []
+            },
+            {
+              "name": "definir message",
+              "description": "Description — voir /partenariat-config variables",
+              "options": []
+            },
+            {
+              "name": "definir couleur",
+              "description": "Couleur hex, ex: #7c6cf0",
+              "options": []
+            },
+            {
+              "name": "definir footer",
+              "description": "Texte de pied d'embed (accepte les variables)",
+              "options": []
+            },
+            {
+              "name": "definir miniature",
+              "description": "\"avatar\", \"aucune\", ou une URL d'image",
+              "options": []
+            },
+            {
+              "name": "definir image",
+              "description": "URL d'une grande image/bannière (optionnel)",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "premium",
+          "description": "💎 Voir le statut Premium de ce serveur",
+          "category": "configuration",
+          "file": "src/commands/configuration/premium.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "reglement",
+          "description": "📜 Gérer le règlement interactif du serveur",
+          "category": "configuration",
+          "file": "src/commands/configuration/reglement.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [
+            {
+              "name": "ajouter règle",
+              "description": "Texte de la règle",
+              "options": []
+            },
+            {
+              "name": "publier salon",
+              "description": "Salon",
+              "options": []
+            },
+            {
+              "name": "publier rôle_acceptation",
+              "description": "Rôle donné après acceptation",
+              "options": []
+            },
+            {
+              "name": "supprimer numéro",
+              "description": "Numéro de la règle",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "starboard",
+          "description": "⭐ Panel de configuration du Starboard",
+          "category": "configuration",
+          "file": "src/commands/configuration/starboard.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "welcome-image",
+          "description": "🖼️ Prévisualiser l'image de bienvenue canvas",
+          "category": "configuration",
+          "file": "src/commands/configuration/welcome-image.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [],
+          "options": [
+            {
+              "name": "utilisateur",
+              "description": "Utilisateur à simuler (vous par défaut)",
+              "required": false
+            }
+          ]
+        },
+        {
+          "name": "welcome-set",
+          "description": "👋 Configurer le message de bienvenue",
+          "category": "configuration",
+          "file": "src/commands/configuration/welcome-set.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [
+            {
+              "name": "enable channel",
+              "description": "Salon pour les bienvenues",
+              "options": []
+            }
+          ],
+          "options": []
+        }
+      ]
+    },
+    {
+      "label": "Économie & Jeux",
+      "emoji": "💰",
+      "color": "#FEE75C",
+      "desc": "Coins, pêche, boutique et mini-jeux.",
+      "key": "economie",
+      "count": 8,
+      "commands": [
+        {
+          "name": "balance",
+          "description": "💰 Voir votre solde de pièces",
+          "category": "economie",
+          "file": "src/commands/economie/balance.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": [
+            {
+              "name": "user",
+              "description": "Utilisateur (vous par défaut)",
+              "required": false
+            }
+          ]
+        },
+        {
+          "name": "daily",
+          "description": "💰 Réclamez vos pièces quotidiennes",
+          "category": "economie",
+          "file": "src/commands/economie/daily.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "fish",
+          "description": "🎣 Aller pêcher pour gagner des coins",
+          "category": "economie",
+          "file": "src/commands/economie/fish.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "fishboard",
+          "description": "🏆 Classement des meilleurs pêcheurs",
+          "category": "economie",
+          "file": "src/commands/economie/fishboard.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "fishshop",
+          "description": "🛍️ Boutique de cannes à pêche",
+          "category": "economie",
+          "file": "src/commands/economie/fishshop.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [
+            {
+              "name": "acheter canne",
+              "description": "Canne à acheter",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "give",
+          "description": "💝 Donner des pièces à quelqu'un",
+          "category": "economie",
+          "file": "src/commands/economie/give.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": [
+            {
+              "name": "user",
+              "description": "Utilisateur",
+              "required": true
+            },
+            {
+              "name": "amount",
+              "description": "Montant",
+              "required": true
+            }
+          ]
+        },
+        {
+          "name": "shop",
+          "description": "🛒 Boutique du serveur",
+          "category": "economie",
+          "file": "src/commands/economie/shop.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [
+            {
+              "name": "acheter id",
+              "description": "ID de l'article",
+              "options": []
+            },
+            {
+              "name": "ajouter nom",
+              "description": "Nom de l'article",
+              "options": []
+            },
+            {
+              "name": "ajouter prix",
+              "description": "Prix en coins",
+              "options": []
+            },
+            {
+              "name": "ajouter type",
+              "description": "Type",
+              "options": []
+            },
+            {
+              "name": "ajouter role",
+              "description": "Rôle attribué (si type = role)",
+              "options": []
+            },
+            {
+              "name": "ajouter badge",
+              "description": "Emoji badge (si type = badge)",
+              "options": []
+            },
+            {
+              "name": "ajouter description",
+              "description": "Description de l'article",
+              "options": []
+            },
+            {
+              "name": "ajouter stock",
+              "description": "Stock (-1 = illimité)",
+              "options": []
+            },
+            {
+              "name": "supprimer id",
+              "description": "ID de l'article",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "work",
+          "description": "💼 Travailler pour gagner des coins (cooldown 1h)",
+          "category": "economie",
+          "file": "src/commands/economie/work.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": []
+        }
+      ]
+    },
+    {
+      "label": "Niveaux & XP",
+      "emoji": "🏆",
+      "color": "#EB459E",
+      "desc": "Récompensez l'activité de vos membres.",
+      "key": "xp",
+      "count": 1,
+      "commands": [
+        {
+          "name": "rank",
+          "description": "🏆 Voir votre carte de niveau (ou celle d'un autre membre)",
+          "category": "xp",
+          "file": "src/commands/xp/rank.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": [
+            {
+              "name": "membre",
+              "description": "Le membre à afficher",
+              "required": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Communauté",
+      "emoji": "🎉",
+      "color": "#57F287",
+      "desc": "Giveaways, sondages, suggestions, anniversaires…",
+      "key": "communaute",
+      "count": 17,
+      "commands": [
+        {
+          "name": "anniversaire",
+          "description": "🎂 Gérer votre date d'anniversaire sur ce serveur",
+          "category": "communaute",
+          "file": "src/commands/communaute/anniversaire.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [
+            {
+              "name": "definir jour",
+              "description": "Jour (1-31)",
+              "options": []
+            },
+            {
+              "name": "definir mois",
+              "description": "Mois (1-12)",
+              "options": []
+            },
+            {
+              "name": "definir annee",
+              "description": "Année de naissance (optionnel, jamais affichée publiquement)",
+              "options": []
+            },
+            {
+              "name": "voir membre",
+              "description": "Le membre (vous par défaut)",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "announce",
+          "description": "📢 Envoyer une annonce dans un salon",
+          "category": "communaute",
+          "file": "src/commands/communaute/announce.js",
+          "defaultMemberPermissions": "8192",
+          "subcommands": [],
+          "options": [
+            {
+              "name": "message",
+              "description": "Contenu de l'annonce",
+              "required": true
+            },
+            {
+              "name": "salon",
+              "description": "Salon cible (actuel par défaut)",
+              "required": false
+            },
+            {
+              "name": "titre",
+              "description": "Titre de l'embed",
+              "required": false
+            },
+            {
+              "name": "couleur",
+              "description": "Couleur hex (ex: #FF0000)",
+              "required": false
+            },
+            {
+              "name": "ping_everyone",
+              "description": "Pinger @everyone ?",
+              "required": false
+            }
+          ]
+        },
+        {
+          "name": "avis",
+          "description": "⭐ Système d'avis sur les serveurs du réseau",
+          "category": "communaute",
+          "file": "src/commands/communaute/avis.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [
+            {
+              "name": "noter note",
+              "description": "Note de 1 à 5",
+              "options": []
+            },
+            {
+              "name": "noter commentaire",
+              "description": "Votre avis (max 500 caractères)",
+              "options": []
+            },
+            {
+              "name": "noter anonyme",
+              "description": "Publier anonymement (si autorisé)",
+              "options": []
+            },
+            {
+              "name": "noter image1",
+              "description": "Image jointe (capture d'écran, preuve...) — PNG/JPEG/WEBP/GIF",
+              "options": []
+            },
+            {
+              "name": "noter image2",
+              "description": "Deuxième image (optionnel)",
+              "options": []
+            },
+            {
+              "name": "noter image3",
+              "description": "Troisième image (optionnel)",
+              "options": []
+            },
+            {
+              "name": "modifier note",
+              "description": "Nouvelle note de 1 à 5",
+              "options": []
+            },
+            {
+              "name": "modifier commentaire",
+              "description": "Nouveau commentaire",
+              "options": []
+            },
+            {
+              "name": "modifier image1",
+              "description": "Image jointe — remplace les images existantes si fournie",
+              "options": []
+            },
+            {
+              "name": "modifier image2",
+              "description": "Deuxième image (optionnel)",
+              "options": []
+            },
+            {
+              "name": "modifier image3",
+              "description": "Troisième image (optionnel)",
+              "options": []
+            },
+            {
+              "name": "repondre membre",
+              "description": "Auteur de l'avis",
+              "options": []
+            },
+            {
+              "name": "repondre reponse",
+              "description": "Votre réponse",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "confession",
+          "description": "🤫 Envoyer une confession anonyme ou configurer le système",
+          "category": "communaute",
+          "file": "src/commands/communaute/confession.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "freegames",
+          "description": "🎮 Jeux gratuits du moment — Epic, Steam, GamerPower",
+          "category": "communaute",
+          "file": "src/commands/communaute/freegames.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [
+            {
+              "name": "voir source",
+              "description": "Source à consulter",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "giveaway",
+          "description": "🎉 Gérer les giveaways",
+          "category": "communaute",
+          "file": "src/commands/communaute/giveaway.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [
+            {
+              "name": "créer prix",
+              "description": "Que faites-vous gagner?",
+              "options": []
+            },
+            {
+              "name": "créer durée",
+              "description": "Durée: 10m, 1h, 2d...",
+              "options": []
+            },
+            {
+              "name": "créer gagnants",
+              "description": "Nombre de gagnants (défaut: 1)",
+              "options": []
+            },
+            {
+              "name": "créer rôle_requis",
+              "description": "Rôle obligatoire pour participer (optionnel)",
+              "options": []
+            },
+            {
+              "name": "terminer message_id",
+              "description": "ID du message du giveaway",
+              "options": []
+            },
+            {
+              "name": "relancer message_id",
+              "description": "ID du message du giveaway",
+              "options": []
+            },
+            {
+              "name": "participants message_id",
+              "description": "ID du message du giveaway",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "invites",
+          "description": "🔗 Statistiques avancées du système d'invitations",
+          "category": "communaute",
+          "file": "src/commands/communaute/invites-avance.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [
+            {
+              "name": "voir membre",
+              "description": "Membre à consulter (par défaut: vous)",
+              "options": []
+            },
+            {
+              "name": "classement page",
+              "description": "Numéro de page",
+              "options": []
+            },
+            {
+              "name": "invites-par membre",
+              "description": "L'inviteur",
+              "options": []
+            },
+            {
+              "name": "bonus membre",
+              "description": "Membre concerné",
+              "options": []
+            },
+            {
+              "name": "bonus montant",
+              "description": "Nombre à ajouter (négatif pour retirer)",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "invites-avance",
+          "description": "🔗 Voir les invitations du serveur et qui les a crées",
+          "category": "communaute",
+          "file": "src/commands/communaute/invites.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "members",
+          "description": "👥 Voir les membres qui ont récemment rejoint/quitté",
+          "category": "communaute",
+          "file": "src/commands/communaute/members.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "news",
+          "description": "📰 Système d'actualités françaises automatiques",
+          "category": "communaute",
+          "file": "src/commands/communaute/news.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [
+            {
+              "name": "dernieres source",
+              "description": "Source à consulter",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "partenariat",
+          "description": "🤝 Enregistrer un partenariat effectué et poster l'annonce automatique",
+          "category": "communaute",
+          "file": "src/commands/communaute/partenariat.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [],
+          "options": [
+            {
+              "name": "membre",
+              "description": "Membre à créditer (défaut : toi-même)",
+              "required": false
+            },
+            {
+              "name": "serveur",
+              "description": "Nom du serveur partenaire",
+              "required": false
+            },
+            {
+              "name": "invite",
+              "description": "Lien d'invitation du serveur partenaire",
+              "required": false
+            },
+            {
+              "name": "description",
+              "description": "Détail optionnel du partenariat",
+              "required": false
+            }
+          ]
+        },
+        {
+          "name": "poll",
+          "description": "📊 Créer un sondage",
+          "category": "communaute",
+          "file": "src/commands/communaute/poll.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": [
+            {
+              "name": "question",
+              "description": "La question du sondage",
+              "required": true
+            },
+            {
+              "name": "choix",
+              "description": "Choix séparés par | ex: Oui|Non|Peut-être",
+              "required": true
+            },
+            {
+              "name": "durée",
+              "description": "Durée en minutes (0 = illimité)",
+              "required": false
+            }
+          ]
+        },
+        {
+          "name": "reddit-annonce",
+          "description": "🟠 Panel des annonces Reddit automatiques",
+          "category": "communaute",
+          "file": "src/commands/communaute/reddit-annonce.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "reputation",
+          "description": "⭐ Système de réputation entre membres",
+          "category": "communaute",
+          "file": "src/commands/communaute/reputation.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [
+            {
+              "name": "donner membre",
+              "description": "Membre à qui donner un point",
+              "options": []
+            },
+            {
+              "name": "voir membre",
+              "description": "Membre (vous par défaut)",
+              "options": []
+            },
+            {
+              "name": "config activer",
+              "description": "Activer/désactiver",
+              "options": []
+            },
+            {
+              "name": "config cooldown_heures",
+              "description": "Délai entre deux dons au même membre (heures)",
+              "options": []
+            },
+            {
+              "name": "config salon",
+              "description": "Restreindre à un salon (laisser vide pour autoriser partout)",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "sondage",
+          "description": "📊 Sondage avancé multi-options (anonyme ou public)",
+          "category": "communaute",
+          "file": "src/commands/communaute/sondage.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": [
+            {
+              "name": "question",
+              "description": "Question du sondage",
+              "required": true
+            },
+            {
+              "name": "options",
+              "description": "Options séparées par des virgules (2-10)",
+              "required": true
+            },
+            {
+              "name": "anonyme",
+              "description": "Cacher qui a voté pour quoi ?",
+              "required": false
+            },
+            {
+              "name": "durée_minutes",
+              "description": "Durée en minutes (0 = illimité)",
+              "required": false
+            }
+          ]
+        },
+        {
+          "name": "suggestion",
+          "description": "💡 Système de suggestions avancé",
+          "category": "communaute",
+          "file": "src/commands/communaute/suggestion.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [
+            {
+              "name": "proposer texte",
+              "description": "Votre suggestion",
+              "options": []
+            },
+            {
+              "name": "proposer categorie",
+              "description": "Catégorie",
+              "options": []
+            },
+            {
+              "name": "proposer anonyme",
+              "description": "Proposer anonymement (si autorisé)",
+              "options": []
+            },
+            {
+              "name": "approuver numero",
+              "description": "Numéro de la suggestion",
+              "options": []
+            },
+            {
+              "name": "approuver raison",
+              "description": "Raison (optionnel)",
+              "options": []
+            },
+            {
+              "name": "refuser numero",
+              "description": "Numéro de la suggestion",
+              "options": []
+            },
+            {
+              "name": "refuser raison",
+              "description": "Raison (optionnel)",
+              "options": []
+            },
+            {
+              "name": "modifier numero",
+              "description": "Numéro de la suggestion",
+              "options": []
+            },
+            {
+              "name": "modifier texte",
+              "description": "Nouveau texte",
+              "options": []
+            },
+            {
+              "name": "supprimer numero",
+              "description": "Numéro de la suggestion",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "todo",
+          "description": "✅ Todo-list complète du serveur — cases à cocher, échéances, calendrier",
+          "category": "communaute",
+          "file": "src/commands/communaute/todo.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": []
+        }
+      ]
+    },
+    {
+      "label": "Utilitaires",
+      "emoji": "🔧",
+      "color": "#5BC0EB",
+      "desc": "Informations pratiques et outils du quotidien.",
+      "key": "utilitaires",
+      "count": 15,
+      "commands": [
+        {
+          "name": "activity",
+          "description": "📊 Affiche les statistiques Discord en temps réel avec graphique",
+          "category": "utilitaires",
+          "file": "src/commands/utilitaires/activity.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "ai-playground",
+          "description": "🤖 Gérer le salon AI Playground",
+          "category": "utilitaires",
+          "file": "src/commands/utilitaires/ai-playground.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "auth-profil",
+          "description": "Gérer votre profil d'authentification personnel (PIN, 2FA, Passkeys)",
+          "category": "utilitaires",
+          "file": "src/commands/utilitaires/auth-profil.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "botinfo",
+          "description": "🤖 Informations complètes sur Bumpify",
+          "category": "utilitaires",
+          "file": "src/commands/utilitaires/botinfo.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "changelog",
+          "description": "🗒️ Voir l'historique des mises à jour du bot",
+          "category": "utilitaires",
+          "file": "src/commands/utilitaires/changelog.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "editprofile",
+          "description": "🎨 Personnaliser ton profil Bumpify",
+          "category": "utilitaires",
+          "file": "src/commands/utilitaires/editprofile.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": [
+            {
+              "name": "bio",
+              "description": "Ta bio (max 200 caractères)",
+              "required": false
+            },
+            {
+              "name": "citation",
+              "description": "Ta citation favorite (max 100 caractères)",
+              "required": false
+            },
+            {
+              "name": "couleur",
+              "description": "Couleur du thème (hex, ex: #FF5733)",
+              "required": false
+            }
+          ]
+        },
+        {
+          "name": "embed",
+          "description": "📝 Créer et envoyer un embed personnalisé",
+          "category": "utilitaires",
+          "file": "src/commands/utilitaires/embed.js",
+          "defaultMemberPermissions": "8192",
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "help",
+          "description": "📖 Afficher l'aide complète de Bumpify",
+          "category": "utilitaires",
+          "file": "src/commands/utilitaires/help.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "ia",
+          "description": "🤖 Chat IA (Gemini) — parlez avec l'IA ou configurez le système",
+          "category": "utilitaires",
+          "file": "src/commands/utilitaires/ia.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [
+            {
+              "name": "chat message",
+              "description": "Votre message",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "ping",
+          "description": "📡 Affiche un diagnostic réseau avancé",
+          "category": "utilitaires",
+          "file": "src/commands/utilitaires/ping.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "profile",
+          "description": "🎖️ Voir la carte de profil bump d'un utilisateur",
+          "category": "utilitaires",
+          "file": "src/commands/utilitaires/profile.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": [
+            {
+              "name": "utilisateur",
+              "description": "Utilisateur à voir (vous par défaut)",
+              "required": false
+            }
+          ]
+        },
+        {
+          "name": "profilecustom",
+          "description": "🎨 Personnaliser l'apparence de ta carte de profil",
+          "category": "utilitaires",
+          "file": "src/commands/utilitaires/profilecustom.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": [
+            {
+              "name": "couleur_fond",
+              "description": "Couleur de fond personnalisée (hex, ex: #1a1b2e)",
+              "required": false
+            },
+            {
+              "name": "banniere",
+              "description": "URL d'une image de bannière de fond",
+              "required": false
+            },
+            {
+              "name": "couleur_accent",
+              "description": "Couleur d'accent (barre / anneau avatar, hex, ex: #FF5733)",
+              "required": false
+            },
+            {
+              "name": "afficher_badges",
+              "description": "Afficher tes badges sur la carte de profil",
+              "required": false
+            }
+          ]
+        },
+        {
+          "name": "reminder",
+          "description": "⏰ Créer un rappel personnel",
+          "category": "utilitaires",
+          "file": "src/commands/utilitaires/reminder.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": [
+            {
+              "name": "durée",
+              "description": "Ex: 10m, 2h, 1d",
+              "required": true
+            },
+            {
+              "name": "message",
+              "description": "Message du rappel",
+              "required": true
+            }
+          ]
+        },
+        {
+          "name": "uptime",
+          "description": "⏱️ Voir depuis combien de temps le bot est en ligne",
+          "category": "utilitaires",
+          "file": "src/commands/utilitaires/uptime.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "user-info",
+          "description": "👤 Afficher les infos d'un utilisateur",
+          "category": "utilitaires",
+          "file": "src/commands/utilitaires/user-info.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": [
+            {
+              "name": "user",
+              "description": "Utilisateur (vous par défaut)",
+              "required": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Fun",
+      "emoji": "🎲",
+      "color": "#F47B67",
+      "desc": "Un peu de légèreté entre deux bumps.",
+      "key": "fun",
+      "count": 7,
+      "commands": [
+        {
+          "name": "imagine",
+          "description": "Génère une image IA gratuitement et sans limite.",
+          "category": "fun",
+          "file": "src/commands/fun/imagine.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": [
+            {
+              "name": "prompt",
+              "description": "Description de l’image à générer",
+              "required": true
+            },
+            {
+              "name": "style",
+              "description": "Style visuel",
+              "required": false,
+              "choices": [
+                "Neon",
+                "Anime",
+                "Réaliste",
+                "Dark",
+                "Cute",
+                "Tech futuriste"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "joke",
+          "description": "😄 Entendre une blague (avec chute cachée, notation, et plein de catégories)",
+          "category": "fun",
+          "file": "src/commands/fun/joke.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": [
+            {
+              "name": "categorie",
+              "description": "Choisir une catégorie",
+              "required": false,
+              "choices": [
+                "🎲 Toutes catégories",
+                "💻 Informatique",
+                "🐾 Animaux",
+                "🤪 Absurde",
+                "🔤 Jeux de mots",
+                "🎒 École",
+                "🍔 Nourriture"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "livre",
+          "description": "📖 Ton livre personnel — chapitres, navigation, partage et export",
+          "category": "fun",
+          "file": "src/commands/fun/livre.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [
+            {
+              "name": "creer titre",
+              "description": "Titre du livre",
+              "options": []
+            },
+            {
+              "name": "creer description",
+              "description": "Courte description",
+              "options": []
+            },
+            {
+              "name": "creer couleur",
+              "description": "Couleur de couverture (hex, ex: #5865F2)",
+              "options": []
+            },
+            {
+              "name": "creer image",
+              "description": "URL d'image de couverture",
+              "options": []
+            },
+            {
+              "name": "couverture titre",
+              "description": "Livre à modifier",
+              "options": []
+            },
+            {
+              "name": "couverture nouveau_titre",
+              "description": "Nouveau titre",
+              "options": []
+            },
+            {
+              "name": "couverture description",
+              "description": "Nouvelle description",
+              "options": []
+            },
+            {
+              "name": "couverture couleur",
+              "description": "Nouvelle couleur (hex)",
+              "options": []
+            },
+            {
+              "name": "couverture image",
+              "description": "Nouvelle URL d'image",
+              "options": []
+            },
+            {
+              "name": "ouvrir titre",
+              "description": "Titre du livre",
+              "options": []
+            },
+            {
+              "name": "ouvrir page",
+              "description": "Numéro du chapitre à afficher",
+              "options": []
+            },
+            {
+              "name": "sommaire titre",
+              "description": "Titre du livre",
+              "options": []
+            },
+            {
+              "name": "supprimer titre",
+              "description": "Titre du livre",
+              "options": []
+            },
+            {
+              "name": "rechercher terme",
+              "description": "Terme à rechercher",
+              "options": []
+            },
+            {
+              "name": "rechercher titre",
+              "description": "Limiter la recherche à un livre",
+              "options": []
+            },
+            {
+              "name": "exporter titre",
+              "description": "Titre du livre",
+              "options": []
+            },
+            {
+              "name": "exporter format",
+              "description": "Format du fichier",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "mathquiz",
+          "description": "🧮 Quiz maths — gagne des coins !",
+          "category": "fun",
+          "file": "src/commands/fun/mathquiz.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": [
+            {
+              "name": "difficulté",
+              "description": "Niveau",
+              "required": false,
+              "choices": [
+                "😊 Facile (+5 coins)",
+                "😐 Moyen (+15 coins)",
+                "😤 Difficile (+30 coins)"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "meteo",
+          "description": "🌤️ Voir la météo actuelle d'une ville",
+          "category": "fun",
+          "file": "src/commands/fun/meteo.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": [
+            {
+              "name": "ville",
+              "description": "Nom de la ville (ex: Paris, Montréal, Tokyo)",
+              "required": true
+            }
+          ]
+        },
+        {
+          "name": "planet",
+          "description": "🌍 Créez et faites grandir votre propre planète",
+          "category": "fun",
+          "file": "src/commands/fun/planet.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "roll",
+          "description": "🎲 Lancer un dé",
+          "category": "fun",
+          "file": "src/commands/fun/roll.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [],
+          "options": [
+            {
+              "name": "sides",
+              "description": "Nombre de faces (1-999)",
+              "required": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Propriétaire",
+      "emoji": "🔑",
+      "color": "#2C2F33",
+      "desc": "Commandes réservées au(x) propriétaire(s) du bot.",
+      "key": "owner",
+      "count": 3,
+      "commands": [
+        {
+          "name": "blacklist",
+          "description": "⛔ [Propriétaire uniquement] Blacklist globale des serveurs",
+          "category": "owner",
+          "file": "src/commands/owner/blacklist.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [
+            {
+              "name": "serveur serveur_id",
+              "description": "ID du serveur à blacklister",
+              "options": []
+            },
+            {
+              "name": "serveur raison",
+              "description": "Motif de la blacklist",
+              "options": []
+            },
+            {
+              "name": "retirer serveur_id",
+              "description": "ID du serveur à déblacklister",
+              "options": []
+            },
+            {
+              "name": "info serveur_id",
+              "description": "ID du serveur",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "premium-admin",
+          "description": "🔑 [Propriétaire uniquement] Gérer le Premium d'un serveur",
+          "category": "owner",
+          "file": "src/commands/owner/premium-admin.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [
+            {
+              "name": "activer serveur_id",
+              "description": "ID du serveur",
+              "options": []
+            },
+            {
+              "name": "activer tier",
+              "description": "Niveau",
+              "options": []
+            },
+            {
+              "name": "activer jours",
+              "description": "Durée en jours (vide = illimité)",
+              "options": []
+            },
+            {
+              "name": "activer raison",
+              "description": "Note (ex: partenaire, beta testeur)",
+              "options": []
+            },
+            {
+              "name": "désactiver serveur_id",
+              "description": "ID du serveur",
+              "options": []
+            },
+            {
+              "name": "info serveur_id",
+              "description": "ID du serveur",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "status",
+          "description": "🤖 [Propriétaire uniquement] Configurer le statut du bot",
+          "category": "owner",
+          "file": "src/commands/owner/status.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [
+            {
+              "name": "definir type",
+              "description": "Type d'activité",
+              "options": []
+            },
+            {
+              "name": "definir texte",
+              "description": "Texte affiché après le type",
+              "options": []
+            },
+            {
+              "name": "definir presence",
+              "description": "Statut de présence (en ligne, inactif...)",
+              "options": []
+            },
+            {
+              "name": "definir lien",
+              "description": "Lien Twitch/YouTube (uniquement pour \"Diffuse en direct\")",
+              "options": []
+            }
+          ],
+          "options": []
+        }
+      ]
+    }
+  ]
+}
