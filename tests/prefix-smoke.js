@@ -42,7 +42,10 @@ mockClient.commands.set('welcome', fakeCommand('welcome', [
   { name: 'test', type: 1, options: [{ name: 'style', type: 3, required: false }] },
 ]));
 mockClient.commands.set('chooser', fakeCommand('chooser', [
-  { name: 'mode', type: 3, required: true, choices: [{ name: 'A', value: 'a' }] },
+  { name: 'mode', type: 3, required: true, choices: [
+    { name: 'Attaque', value: 'attack' },
+    { name: 'Défense', value: 'defense' },
+  ] },
 ]));
 mockClient.commands.set('multi', fakeCommand('multi', [
   { name: 'un', type: 1, options: [] },
@@ -75,6 +78,9 @@ check('sous-commandes multiples sans sub → rootOpts null', r5 !== null && r5.r
 
 const r6 = resolveCommand(mockClient, ['inexistante']);
 check('commande inconnue → null', r6 === null);
+
+const r7 = resolveCommand(mockClient, ['chooser', 'attack']);
+check('choix fixes : commande résolue', r7?.json.name === 'chooser');
 
 // ─── 3. Hydratation des options ───────────────────────────────────────────────
 const mockGuild = {
@@ -134,6 +140,22 @@ async function testHydration() {
   const roleCmd = fakeCommand('addrole', [{ name: 'role', type: 8, required: true }]);
   const h4 = await hydrateOptions(fake1, roleCmd.data?.options || [{ name: 'role', type: 8, required: true }], ['Modo']);
   check('hydratation rôle par nom', h4.resolved[0]?.value === '888888888888888888', JSON.stringify(h4.resolved));
+
+  // choix fixes : par valeur, par libellé, casse mixte, invalide
+  const chOpts = [{
+    name: 'mode', type: 3, required: true,
+    choices: [
+      { name: 'Attaque', value: 'attack' },
+      { name: 'Défense', value: 'defense' },
+    ],
+  }];
+  const chCmd = fakeCommand('chooser', chOpts);
+  const c1 = await hydrateOptions(fake1, chOpts, ['attack']);
+  check('choix par valeur', c1.resolved[0]?.value === 'attack' && c1.choiceErrors.length === 0, JSON.stringify(c1));
+  const c2 = await hydrateOptions(fake1, chOpts, ['défense']);
+  check('choix par libellé (casse/accents)', c2.resolved[0]?.value === 'defense', JSON.stringify(c2));
+  const c3 = await hydrateOptions(fake1, chOpts, ['magie']);
+  check('choix invalide → erreur', c3.resolved.length === 0 && c3.choiceErrors.length === 1 && c3.choiceErrors[0].name === 'mode', JSON.stringify(c3));
 }
 
 // ─── 4. Fausse interaction ────────────────────────────────────────────────────

@@ -309,6 +309,7 @@ function makeFakeInteraction({ message, client, cfg, commandName, groupName, sub
 async function hydrateOptions(interaction, rootOpts, tokens) {
   const resolved = [];
   const missing = [];
+  const choiceErrors = [];
   let ti = 0;
 
   for (const opt of rootOpts) {
@@ -321,6 +322,24 @@ async function hydrateOptions(interaction, rootOpts, tokens) {
       continue;
     }
     ti += 1;
+
+    // Options à choix fixes : accepte la valeur OU le libellé (insensible à la casse)
+    if (Array.isArray(opt.choices) && opt.choices.length) {
+      const needle = String(raw).toLowerCase();
+      const hit = opt.choices.find(
+        c => String(c.value).toLowerCase() === needle || String(c.name).toLowerCase() === needle,
+      );
+      if (hit) {
+        resolved.push({ name: opt.name, type: opt.type, value: hit.value });
+        continue;
+      }
+      choiceErrors.push({
+        name: opt.name,
+        liste: opt.choices.slice(0, 8).map(c => `\`${c.value}\``).join(', '),
+      });
+      if (opt.required) missing.push(opt.name);
+      continue;
+    }
 
     const value = parseValue(raw, kind);
     if (value === undefined) {
@@ -373,7 +392,7 @@ async function hydrateOptions(interaction, rootOpts, tokens) {
     resolved.push({ name: opt.name, type: opt.type, value });
   }
 
-  return { resolved, missing };
+  return { resolved, missing, choiceErrors };
 }
 
 function resolveRole(interaction, raw) {
@@ -434,22 +453,20 @@ async function handlePrefixMessage(message, client) {
     return true;
   }
 
-  // Options à choix fixes : pas reproductibles en texte → refus propre
-  const choiceOpts = (rootOpts || []).filter(o => Array.isArray(o.choices) && o.choices.length);
-  if (choiceOpts.length) {
-    await message.reply({
-      embeds: [new EmbedBuilder().setColor(COLORS.warning)
-        .setDescription(`\`/${json.name}${subName ? ` ${subName}` : ''}\` utilise des options à choix fixes (${choiceOpts.map(o => `\`${o.name}\``).join(', ')}) : utilise la version slash.`)],
-    }).catch(() => {});
-    return true;
-  }
-
   const fake = makeFakeInteraction({
     message, client, cfg, commandName: json.name, groupName, subName, resolvedOpts: [],
   });
 
-  const { resolved, missing } = await hydrateOptions(fake, rootOpts, rest);
+  const { resolved, missing, choiceErrors } = await hydrateOptions(fake, rootOpts, rest);
   fake.options.data = resolved;
+
+  if (choiceErrors.length) {
+    await message.reply({
+      embeds: [new EmbedBuilder().setColor(COLORS.warning)
+        .setDescription(choiceErrors.map(e => `Valeur invalide pour **${e.name}** : accepte ${e.liste}.`).join('\n'))],
+    }).catch(() => {});
+    return true;
+  }
 
   if (missing.length) {
     await message.reply({
