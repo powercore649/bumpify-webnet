@@ -15,25 +15,16 @@ module.exports = {
       await cancelOnboarding(guild, member.id);
     } catch (err) { console.error('guildMemberRemove onboarding:', err); }
 
-    // ── Farewell ────────────────────────────────────────────────────────────
+    // ── Au revoir+ (message, image canvas, variables, stats) ────────────────
     try {
       const farewell = await Farewell.findOne({ guildId: guild.id, enabled: true });
-      if (farewell?.channelId) {
-        const channel = await guild.channels.fetch(farewell.channelId).catch(() => null);
-        if (channel?.isTextBased()) {
-          const msg = farewell.message.replace('{user}', member.user.tag);
-          await channel.send({
-            embeds: [new EmbedBuilder()
-              .setColor(0xFF6B6B)
-              .setTitle('👋 Au revoir!')
-              .setDescription(msg)
-              .setThumbnail(member.user.displayAvatarURL())
-              .setTimestamp()
-            ],
-          }).catch(() => {});
-        }
+      if (farewell) {
+        const { sendFarewell, recordLeaveStats } = require('../../utils/welcomeManager');
+        await sendFarewell(member, farewell);
+        const Welcome = require('../../models/Welcome').Welcome;
+        await recordLeaveStats(Welcome, guild);
       }
-    } catch (_) {}
+    } catch (err) { console.error('guildMemberRemove au revoir:', err.message); }
 
     // ── Système d'invitations avancé : marquer comme reparti + annonce ─────
     try {

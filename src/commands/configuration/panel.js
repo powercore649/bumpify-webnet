@@ -20,7 +20,7 @@ const CATEGORIES = {
     label: '📋 Général',
     modules: [
       { value: 'config',        label: '🚀 Bump & Config',        description: 'Description, invitation, salons, rappels', direct: 'config' },
-      { value: 'welcome',       label: '👋 Bienvenue & Au revoir', description: 'Messages d\'arrivée et de départ',         guide: '`/welcome-set` et `/farewell-set` — plusieurs réglages, d\'où des commandes dédiées' },
+      { value: 'welcome',       label: '👋 Bienvenue & Au revoir', description: 'Messages d\'arrivée et de départ',         guide: '`/welcome panel` (Bienvenue+ : message, image, MP, boutons, compteur, stats) et `/farewell-set panel`' },
       { value: 'interserveur',  label: '🌐 Inter-Serveur',        description: 'Chat entre serveurs en temps réel',        direct: 'interserveur' },
       { value: 'notifications', label: '🔔 Notifications',        description: 'Salons de notifications du serveur',       guide: '`/notifications config` — Configurer les salons de notifications' },
       { value: 'onboarding',    label: '🚪 Portail d\'accès',      description: 'Questions obligatoires avant accès au serveur', direct: 'onboarding' },

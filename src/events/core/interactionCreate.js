@@ -96,12 +96,12 @@ module.exports = {
         if (cmd?.handleSearchModal) await cmd.handleSearchModal(interaction).catch(console.error);
         return;
       }
-      if (id === 'modal_welcome_message') {
-        const cmd = client.commands.get('welcome-set');
+      if (id.startsWith('wlm_')) {
+        const cmd = client.commands.get('welcome');
         if (cmd?.handleModal) await cmd.handleModal(interaction).catch(console.error);
         return;
       }
-      if (id === 'modal_farewell_message') {
+      if (id.startsWith('fwellm_')) {
         const cmd = client.commands.get('farewell-set');
         if (cmd?.handleModal) await cmd.handleModal(interaction).catch(console.error);
         return;
@@ -258,6 +258,20 @@ module.exports = {
     if (interaction.isAnySelectMenu()) {
       const secIds = ['sec_logs_channel','sec_exempt_role_select','sec_exempt_chan_select','mm_set_category','mm_set_log','mm_set_role'];
       if (secIds.includes(interaction.customId)) return;
+
+      // Bienvenue+ — menus du panneau /welcome panel
+      if (interaction.customId.startsWith('wls_')) {
+        const cmd = client.commands.get('welcome');
+        if (cmd?.handleSelect) await cmd.handleSelect(interaction).catch(console.error);
+        return;
+      }
+
+      // Au revoir — menus du panneau /farewell-set panel
+      if (interaction.customId.startsWith('fwells_')) {
+        const cmd = client.commands.get('farewell-set');
+        if (cmd?.handleSelect) await cmd.handleSelect(interaction).catch(console.error);
+        return;
+      }
     }
 
     // ── ChannelSelectMenu inter-serveur ───────────────────────────────────
@@ -346,6 +360,20 @@ module.exports = {
       // Profil d'authentification personnel (PIN / 2FA / Passkeys)
       if (id.startsWith('auth_')) {
         const cmd = client.commands.get('auth-profil');
+        if (cmd?.handleButton) await cmd.handleButton(interaction).catch(console.error);
+        return;
+      }
+
+      // Bienvenue+ — boutons du panneau /welcome panel
+      if (id.startsWith('wlb_')) {
+        const cmd = client.commands.get('welcome');
+        if (cmd?.handleButton) await cmd.handleButton(interaction).catch(console.error);
+        return;
+      }
+
+      // Au revoir — boutons du panneau /farewell-set panel
+      if (id.startsWith('fwell_')) {
+        const cmd = client.commands.get('farewell-set');
         if (cmd?.handleButton) await cmd.handleButton(interaction).catch(console.error);
         return;
       }

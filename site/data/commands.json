@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-27T17:26:16.119Z",
+  "generatedAt": "2026-09-27T19:59:36.163Z",
   "total": 104,
   "categories": [
     {
@@ -908,17 +908,11 @@
         },
         {
           "name": "farewell-set",
-          "description": "👋 Configurer le message d'au revoir",
+          "description": "👋 Système d'au revoir : message, embed, image canvas",
           "category": "configuration",
           "file": "src/commands/configuration/farewell-set.js",
           "defaultMemberPermissions": "32",
-          "subcommands": [
-            {
-              "name": "enable channel",
-              "description": "Salon",
-              "options": []
-            }
-          ],
+          "subcommands": [],
           "options": []
         },
         {
@@ -1170,34 +1164,39 @@
           "options": []
         },
         {
+          "name": "welcome",
+          "description": "👋 Système de bienvenue complet : message, image, MP, boutons, compteur, stats",
+          "category": "configuration",
+          "file": "src/commands/configuration/welcome.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [],
+          "options": []
+        },
+        {
           "name": "welcome-image",
-          "description": "🖼️ Prévisualiser l'image de bienvenue canvas",
+          "description": "🖼️ Prévisualiser une image de bienvenue Bumpify",
           "category": "configuration",
           "file": "src/commands/configuration/welcome-image.js",
           "defaultMemberPermissions": "32",
           "subcommands": [],
           "options": [
             {
+              "name": "style",
+              "description": "Style de carte à prévisualiser (celui du serveur par défaut)",
+              "required": false,
+              "choices": [
+                "🌈 Gradient néon (signature Bumpify)",
+                "❄️ Vitrail de glace",
+                "🎭 Bandeau diagonal",
+                "⬜ Carte épurée"
+              ]
+            },
+            {
               "name": "utilisateur",
               "description": "Utilisateur à simuler (vous par défaut)",
               "required": false
             }
           ]
-        },
-        {
-          "name": "welcome-set",
-          "description": "👋 Configurer le message de bienvenue",
-          "category": "configuration",
-          "file": "src/commands/configuration/welcome-set.js",
-          "defaultMemberPermissions": "32",
-          "subcommands": [
-            {
-              "name": "enable channel",
-              "description": "Salon pour les bienvenues",
-              "options": []
-            }
-          ],
-          "options": []
         }
       ]
     },

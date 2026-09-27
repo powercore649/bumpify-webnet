@@ -33,46 +33,42 @@ module.exports = {
       }
     } catch (err) { console.error('guildMemberAdd captcha:', err); }
 
-    // ── Bienvenue ──────────────────────────────────────────────────────────
+    // ── Détection d'invitation — UNE seule fois, partagée par Bienvenue+ et
+    //    les annonces avancées (le second appel ne verrait aucun delta) ─────
+    let inviteDetection = { code: null, inviterId: null, inviterTag: 'Inconnu', method: 'unknown' };
+    try {
+      inviteDetection = await resolveInviteForJoin(guild);
+    } catch (err) { console.error('guildMemberAdd inviteCache:', err.message); }
+
+    // ── Bienvenue+ (message, image canvas, MP, boutons, compteur, stats) ────
     try {
       const welcome = !onboardingActive ? await Welcome.findOne({ guildId: guild.id, enabled: true }) : null;
-      if (welcome?.channelId) {
-        const channel = await guild.channels.fetch(welcome.channelId).catch(() => null);
-        if (channel?.isTextBased()) {
-          const msg = (welcome.message || 'Bienvenue {user} sur **{server}** !')
-            .replace('{user}', member.user.tag)
-            .replace('{server}', guild.name);
+      if (welcome) {
+        const {
+          sendWelcome, sendWelcomeDM, updateMemberCounter, recordJoinStats,
+        } = require('../../utils/welcomeManager');
 
-          // Tentative d'image canvas (avec fallback embed simple si échec/timeout)
-          let imageAttachment = null;
-          try {
-            const { AttachmentBuilder } = require('discord.js');
-            const { generateWelcomeImage } = require('../../commands/configuration/welcome-image');
-            const buf = await Promise.race([
-              generateWelcomeImage(member, guild),
-              new Promise((_, rej) => setTimeout(() => rej(new Error('welcome-image-timeout')), 6000)),
-            ]);
-            imageAttachment = new AttachmentBuilder(buf, { name: 'welcome.png' });
-          } catch (imgErr) {
-            console.warn('[guildMemberAdd] image bienvenue indisponible:', imgErr.message);
-          }
-
-          const embed = new EmbedBuilder()
-            .setColor(0x57F287)
-            .setTitle('👋 Bienvenue!')
-            .setDescription(msg)
-            .setTimestamp();
-
-          if (imageAttachment) {
-            embed.setImage('attachment://welcome.png');
-            await channel.send({ embeds: [embed], files: [imageAttachment] }).catch(() => {});
-          } else {
-            embed.setThumbnail(member.user.displayAvatarURL());
-            await channel.send({ embeds: [embed] }).catch(() => {});
-          }
+        const ctx = {
+          member, guild, client,
+          inviterId: inviteDetection.inviterId || null,
+          inviteCode: inviteDetection.code || null,
+          inviteCount: null,
+        };
+        if (ctx.inviterId) {
+          ctx.inviteCount = await InviteUse.countDocuments({
+            guildId: guild.id,
+            inviterId: ctx.inviterId,
+            left: false,
+            fake: false,
+          });
         }
+
+        await sendWelcome(member, welcome, ctx);
+        await sendWelcomeDM(member, welcome, ctx);
+        await updateMemberCounter(guild, welcome);
+        await recordJoinStats(Welcome, guild);
       }
-    } catch (_) {}
+    } catch (err) { console.error('guildMemberAdd bienvenue:', err.message); }
 
     // ── Auto-Rôle join (du nouveau système autorole.js) ───────────────────
     try {
@@ -109,7 +105,9 @@ module.exports = {
       const enabled = invCfg?.enabled !== false; // activé par défaut si pas de config
 
       if (enabled) {
-        const detection = await resolveInviteForJoin(guild);
+        // Déjà résolue en tête d'event et partagée avec Bienvenue+ (le cache
+        // est déjà à jour — re-résoudre donnerait 'unknown')
+        const detection = inviteDetection;
         const ignored = invCfg?.ignoredCodes || [];
         const isIgnored = detection.code && ignored.includes(detection.code);
 
