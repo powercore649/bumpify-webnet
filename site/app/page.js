@@ -26,7 +26,7 @@ export default function Home() {
           <div className="hero-actions">
             <a
               className="btn btn-primary"
-              href="https://discord.com/oauth2/authorize?client_id=1553442824765181962&permissions=8&scope=bot%20applications.commands"
+              href="https://discord.com/oauth2/authorize?client_id=1553823703903641771&permissions=8&scope=bot%20applications.commands"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -86,7 +86,7 @@ export default function Home() {
           <p>Ajoutez Bumpify, configurez-le en 2 minutes avec /config, et lancez votre premier bump.</p>
           <a
             className="btn btn-primary"
-            href="https://discord.com/oauth2/authorize?client_id=1553442824765181962&permissions=8&scope=bot%20applications.commands"
+            href="https://discord.com/oauth2/authorize?client_id=1553823703903641771&permissions=8&scope=bot%20applications.commands"
             target="_blank"
             rel="noopener noreferrer"
           >

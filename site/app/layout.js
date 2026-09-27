@@ -17,7 +17,7 @@ export default function RootLayout({ children }) {
             </nav>
             <a
               className="btn btn-primary btn-sm"
-              href="https://discord.com/oauth2/authorize?client_id=1553442824765181962&permissions=8&scope=bot%20applications.commands"
+              href="https://discord.com/oauth2/authorize?client_id=1553823703903641771&permissions=8&scope=bot%20applications.commands"
               target="_blank"
               rel="noopener noreferrer"
             >

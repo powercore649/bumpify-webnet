@@ -99,5 +99,5 @@ site/
 ## 🔗 Personnaliser les liens
 
 Les liens d'invitation et de support sont dans `app/layout.js` et `app/page.js`
-(`client_id=1553442824765181962`, serveur de support `discord.gg/ts5mh326ew`).
+(`client_id=1553823703903641771`, serveur de support `discord.gg/ts5mh326ew`).
 Pense aussi à mettre l'URL du site déployé dans les « Liens » du portail développeur Discord.
