@@ -484,6 +484,13 @@ async function handlePrefixMessage(message, client) {
     ).catch(() => {});
     return true;
   } catch (err) {
+    if (err.message === 'PREFIX_MODAL_UNSUPPORTED' || err.message === 'PREFIX_COMPONENT_UNSUPPORTED') {
+      await message.reply({
+        embeds: [new EmbedBuilder().setColor(COLORS.warning)
+          .setDescription(`\`/${json.name}${subName ? ` ${subName}` : ''}\` nécessite un **formulaire/menu interactif** : utilise la version slash \`/${json.name}\`.`)],
+      }).catch(() => {});
+      return true;
+    }
     console.error(`[prefix] /${json.name}:`, err);
     const payload = {
       embeds: [new EmbedBuilder().setColor(COLORS.error)
