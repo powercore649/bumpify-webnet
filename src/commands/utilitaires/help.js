@@ -74,6 +74,7 @@ const CATEGORIES = {
       { name: '/panel',       desc: 'Panel de configuration central *(Admin)*' },
       { name: '/config',      desc: 'Config bump (description, salons…) *(Admin)*' },
       { name: '/captcha',     desc: 'Système de vérification à l\'arrivée *(Admin)*' },
+      { name: '/prefix',      desc: 'Préfixe de commandes personnalisé (système hybride b!commande) *(Admin)*' },
       { name: '/welcome',     desc: 'Bienvenue+ : panneau complet (message, image, MP, boutons, compteur, stats) *(Admin)*' },
       { name: '/farewell-set',desc: 'Au revoir : panneau complet (message, embed, image canvas) *(Admin)*' },
       { name: '/autorole',    desc: 'Rôles automatiques (join, niveau, ancienneté)' },

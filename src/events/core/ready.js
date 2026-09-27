@@ -171,6 +171,14 @@ module.exports = {
       }
     }, 30_000);
 
+    // ── Préfixe hybride — amorçage du cache des configs activées ────────
+    try {
+      const { initCache } = require('../../utils/prefixCommands');
+      await initCache(client);
+    } catch (err) {
+      console.error('prefixCommands init:', err.message);
+    }
+
     // ── Invitations avancées : amorçage du cache pour chaque serveur ─────
     try {
       const { primeGuildCache } = require('../../utils/inviteCache');

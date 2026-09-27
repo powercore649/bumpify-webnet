@@ -106,6 +106,11 @@ module.exports = {
         if (cmd?.handleModal) await cmd.handleModal(interaction).catch(console.error);
         return;
       }
+      if (id.startsWith('pfxm_')) {
+        const cmd = client.commands.get('prefix');
+        if (cmd?.handleModal) await cmd.handleModal(interaction).catch(console.error);
+        return;
+      }
       if (id === 'is_modal_create' || id === 'is_modal_join') {
         const cmd = client.commands.get('interserveur');
         if (cmd?.handleModal) await cmd.handleModal(interaction, client).catch(console.error);
@@ -272,6 +277,13 @@ module.exports = {
         if (cmd?.handleSelect) await cmd.handleSelect(interaction).catch(console.error);
         return;
       }
+
+      // Préfixe hybride — menus du panneau /prefix
+      if (interaction.customId.startsWith('pfxs_')) {
+        const cmd = client.commands.get('prefix');
+        if (cmd?.handleSelect) await cmd.handleSelect(interaction).catch(console.error);
+        return;
+      }
     }
 
     // ── ChannelSelectMenu inter-serveur ───────────────────────────────────
@@ -374,6 +386,13 @@ module.exports = {
       // Au revoir — boutons du panneau /farewell-set panel
       if (id.startsWith('fwell_')) {
         const cmd = client.commands.get('farewell-set');
+        if (cmd?.handleButton) await cmd.handleButton(interaction).catch(console.error);
+        return;
+      }
+
+      // Préfixe hybride — boutons du panneau /prefix
+      if (id.startsWith('pfx_')) {
+        const cmd = client.commands.get('prefix');
         if (cmd?.handleButton) await cmd.handleButton(interaction).catch(console.error);
         return;
       }

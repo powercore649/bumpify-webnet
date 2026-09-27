@@ -73,6 +73,21 @@ module.exports = {
 
     if (message.author.bot || !message.guild) return;
 
+    // ── Préfixe hybride (b!ping → /ping) — avant tout le reste ─────────────
+    // Ne s'active que si le serveur a activé un préfixe via /prefix. Si le
+    // message est une commande préfixée (même inconnue), on s'arrête là :
+    // le préfixe court-circuite XP, AutoMod, counting, relais, etc.
+    try {
+      const { handlePrefixMessage, getGuildConfig } = require('../../utils/prefixCommands');
+      const cfg = await getGuildConfig(message.guildId);
+      if (cfg && message.content?.startsWith(cfg.prefix)) {
+        const handled = await handlePrefixMessage(message, client);
+        if (handled) return;
+      }
+    } catch (err) {
+      console.error('❌ Préfixe:', err.message);
+    }
+
     // ── Counting Game (comptage collaboratif) ──────────────────────────────
     try {
       const { handleCountingMessage } = require('../../utils/countingGame');

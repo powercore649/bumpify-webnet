@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-27T19:59:36.163Z",
-  "total": 104,
+  "generatedAt": "2026-09-27T21:09:00.155Z",
+  "total": 105,
   "categories": [
     {
       "label": "Bump & Réseau",
@@ -710,7 +710,7 @@
       "color": "#99AAB5",
       "desc": "Tout ce qu'il faut pour mettre Bumpify à votre image.",
       "key": "configuration",
-      "count": 24,
+      "count": 25,
       "commands": [
         {
           "name": "anniversaire-config",
@@ -1113,6 +1113,15 @@
               "options": []
             }
           ],
+          "options": []
+        },
+        {
+          "name": "prefix",
+          "description": "⌨️ Préfixe de commandes personnalisé par serveur (système hybride)",
+          "category": "configuration",
+          "file": "src/commands/configuration/prefix.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [],
           "options": []
         },
         {
