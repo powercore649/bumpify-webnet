@@ -147,6 +147,12 @@ module.exports = {
         if (cmd?.handleModal) await cmd.handleModal(interaction).catch(console.error);
         return;
       }
+      // Signalement — modaux (étape 2 : détails)
+      if (id.startsWith('sigm_submit')) {
+        const cmd = client.commands.get('signalement');
+        if (cmd?.handleModal) await cmd.handleModal(interaction, client).catch(console.error);
+        return;
+      }
       if (id === 'is_modal_create' || id === 'is_modal_join') {
         const cmd = client.commands.get('interserveur');
         if (cmd?.handleModal) await cmd.handleModal(interaction, client).catch(console.error);
@@ -327,6 +333,18 @@ module.exports = {
         if (cmd?.handleSelect) await cmd.handleSelect(interaction).catch(console.error);
         return;
       }
+
+      // Signalement — menus du panneau staff (sigs_) et menu motif (sigr_)
+      if (interaction.customId.startsWith('sigs_')) {
+        const cmd = client.commands.get('signalement');
+        if (cmd?.handleSelect) await cmd.handleSelect(interaction).catch(console.error);
+        return;
+      }
+      if (interaction.customId.startsWith('sigr_')) {
+        const cmd = client.commands.get('signalement');
+        if (cmd?.handleReasonMenu) await cmd.handleReasonMenu(interaction).catch(console.error);
+        return;
+      }
     }
 
     // ── ChannelSelectMenu inter-serveur ───────────────────────────────────
@@ -505,6 +523,13 @@ module.exports = {
       // Règlement v2 — boutons du panneau /reglement
       if (id.startsWith('regl_')) {
         const cmd = client.commands.get('reglement');
+        if (cmd?.handleButton) await cmd.handleButton(interaction).catch(console.error);
+        return;
+      }
+
+      // Signalement — boutons du panneau, boutons staff et bouton public
+      if (id.startsWith('sig_') || id.startsWith('sig_open_')) {
+        const cmd = client.commands.get('signalement');
         if (cmd?.handleButton) await cmd.handleButton(interaction).catch(console.error);
         return;
       }

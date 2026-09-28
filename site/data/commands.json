@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-28T19:50:43.318Z",
-  "total": 107,
+  "generatedAt": "2026-09-28T20:23:38.716Z",
+  "total": 108,
   "categories": [
     {
       "label": "Bump & Réseau",
@@ -710,7 +710,7 @@
       "color": "#99AAB5",
       "desc": "Tout ce qu'il faut pour mettre Bumpify à votre image.",
       "key": "configuration",
-      "count": 26,
+      "count": 27,
       "commands": [
         {
           "name": "anniversaire-config",
@@ -1153,6 +1153,15 @@
           "description": "📜 Panneau de gestion complète du règlement (règles, apparence, publication)",
           "category": "configuration",
           "file": "src/commands/configuration/reglement.js",
+          "defaultMemberPermissions": "32",
+          "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "signalement",
+          "description": "🚨 Panneau de gestion complète du système de signalement",
+          "category": "configuration",
+          "file": "src/commands/configuration/signalement.js",
           "defaultMemberPermissions": "32",
           "subcommands": [],
           "options": []
