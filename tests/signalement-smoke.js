@@ -130,7 +130,8 @@ const fieldsOf = (map) => ({ getTextInputValue: (n) => map[n] });
   await cmd.execute(it0);
   check('execute → panneau envoyé', it0._replies.length === 1 && has(it0._replies[0], 'Panneau des signalements'));
   check('config créée', cfgStore.has(GUILD));
-  check('panneau : 6 rows de composants', it0._replies[0].components.length === 6, String(it0._replies[0].components.length));
+  check('panneau : 5 rows max (limite Discord)', it0._replies[0].components.length === 5 && it0._replies[0].components.length <= 5, String(it0._replies[0].components.length));
+  check('cooldown : bouton sig_cooldown présent', has(it0._replies[0], 'sig_cooldown'));
 
   // ─── 3. Toggles du panneau ───────────────────────────────────────────────────
   const itT = makeInteraction({ customId: 'sig_toggle' });

@@ -56,13 +56,18 @@ function buildPanel(cfg, guild, note = null) {
     )
     .setFooter({ text: 'Les membres signalent via le bouton « Signaler » ou en MP au bot' });
 
+  // ⚠️ Discord limite un message à 5 rangées de composants — tout doit tenir dedans.
+  // Row 1 : boutons (toggle, accusé DM, anonymat, cooldown cyclique, stats)
   const stateRow = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('sig_toggle').setLabel(cfg.enabled ? 'Désactiver le système' : 'Activer le système')
+    new ButtonBuilder().setCustomId('sig_toggle').setLabel(cfg.enabled ? 'Désactiver' : 'Activer')
       .setEmoji(cfg.enabled ? '⏸️' : '⚡').setStyle(cfg.enabled ? ButtonStyle.Danger : ButtonStyle.Success),
-    new ButtonBuilder().setCustomId('sig_dm_toggle').setLabel(`Accusé DM : ${cfg.autoAlertUser ? 'ON' : 'OFF'}`)
+    new ButtonBuilder().setCustomId('sig_dm_toggle').setLabel(`DM : ${cfg.autoAlertUser ? 'ON' : 'OFF'}`)
       .setEmoji('📨').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId('sig_anon_toggle').setLabel(`Anonymat : ${cfg.anonymous ? 'ON' : 'OFF'}`)
+    new ButtonBuilder().setCustomId('sig_anon_toggle').setLabel(`Anonyme : ${cfg.anonymous ? 'ON' : 'OFF'}`)
       .setEmoji('🕵️').setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId('sig_cooldown').setLabel(`Cooldown : ${cfg.cooldownSec}s`)
+      .setEmoji('⏱️').setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId('sig_stats').setLabel('Stats').setEmoji('📊').setStyle(ButtonStyle.Primary),
   );
 
   const typeRow = new ActionRowBuilder().addComponents(
@@ -76,24 +81,15 @@ function buildPanel(cfg, guild, note = null) {
     new RoleSelectMenuBuilder().setCustomId('sigs_roles').setPlaceholder('🔐 Restreindre à des rôles (vide = tout le monde)').setMinValues(0).setMaxValues(5),
   );
 
-  const cdRow = new ActionRowBuilder().addComponents(
-    new StringSelectMenuBuilder().setCustomId('sigs_cooldown').setPlaceholder('⏱️ Cooldown entre deux signalements…').addOptions(
-      [15, 30, 60, 120, 300].map(s => ({ label: `${s} secondes`, value: String(s), default: cfg.cooldownSec === s })),
-    ),
+  const logRow = new ActionRowBuilder().addComponents(
+    new ChannelSelectMenuBuilder().setCustomId('sigs_log').setPlaceholder('📥 Salon où recevoir les signalements…').addChannelTypes(ChannelType.GuildText),
   );
 
   const pubRow = new ActionRowBuilder().addComponents(
-    new ChannelSelectMenuBuilder().setCustomId('sigs_log').setPlaceholder('📥 Salon où recevoir les signalements…').addChannelTypes(ChannelType.GuildText),
     new ChannelSelectMenuBuilder().setCustomId('sigs_public').setPlaceholder('📌 Publier le bouton « Signaler » dans…').addChannelTypes(ChannelType.GuildText),
   );
 
-  const actionRow = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('sig_stats').setLabel('Statistiques détaillées').setEmoji('📊').setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId('sig_list').setLabel('Signalements en attente').setEmoji('⏳').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId('sig_close').setLabel('Fermer').setEmoji('❌').setStyle(ButtonStyle.Secondary),
-  );
-
-  return { embeds: [embed], components: [stateRow, typeRow, permsRow, cdRow, pubRow, actionRow] };
+  return { embeds: [embed], components: [stateRow, typeRow, permsRow, logRow, pubRow] };
 }
 
 // ─── Étape 2 : formulaire de détails (modal) ─────────────────────────────────
@@ -245,6 +241,16 @@ module.exports = {
       cfg.updatedAt = new Date();
       await cfg.save();
       return interaction.update(buildPanel(cfg, interaction.guild, `🕵️ Anonymat ${cfg.anonymous ? '**activé** — le staff ne verra pas l\'auteur' : '**désactivé** — l\'auteur sera visible du staff'}.`));
+    }
+
+    // Cooldown cyclique : 15 → 30 → 60 → 120 → 300 → 15
+    if (id === 'sig_cooldown') {
+      const steps = [15, 30, 60, 120, 300];
+      const idx = steps.indexOf(cfg.cooldownSec);
+      cfg.cooldownSec = steps[(idx + 1) % steps.length] ?? 60;
+      cfg.updatedAt = new Date();
+      await cfg.save();
+      return interaction.update(buildPanel(cfg, interaction.guild, `⏱️ Cooldown : **${cfg.cooldownSec}s** entre deux signalements.`));
     }
 
     if (id === 'sig_stats') {
