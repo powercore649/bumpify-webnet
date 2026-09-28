@@ -64,6 +64,18 @@ module.exports = {
     if (interaction.isModalSubmit()) {
       const id = interaction.customId;
 
+      // ── Garde-fou licence — modaux du panneau /config (vieux panneaux persistants) ──
+      if (['modal_description', 'modal_invite', 'modal_tags'].includes(id) && interaction.inGuild()
+          && !(await licenseGate.checkAccess(interaction.guildId, 'config')).ok) {
+        return interaction.reply({
+          embeds: [new EmbedBuilder()
+            .setColor(COLORS.warning)
+            .setTitle('🔒 Licence requise')
+            .setDescription('Le panneau de configuration bump fait partie du **système complet** Bumpify.\nUn administrateur peut activer la licence avec `/license activer cle:BUMP-…`.')],
+          ephemeral: true,
+        }).catch(() => {});
+      }
+
       if (id.startsWith('authgate_confirm_')) {
         const authGate = require('../../utils/authGate');
         await authGate.handleModal(interaction).catch(console.error);

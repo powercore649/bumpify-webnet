@@ -19,6 +19,7 @@ const LICENSE_REQUIRED_COMMANDS = [
   'territoires',   // guerre de territoires inter-serveurs
   'network',       // stats du réseau
   'topserveurs',   // classement des serveurs du réseau
+  'config',        // configuration bump (description, invitation, salons…)
 ];
 
 const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // sans I/L/O/0/1 : clés non ambiguës
