@@ -141,6 +141,12 @@ module.exports = {
         if (cmd?.handleModal) await cmd.handleModal(interaction).catch(console.error);
         return;
       }
+      // Règlement v2 — modaux du panneau /reglement
+      if (id.startsWith('reglm_')) {
+        const cmd = client.commands.get('reglement');
+        if (cmd?.handleModal) await cmd.handleModal(interaction).catch(console.error);
+        return;
+      }
       if (id === 'is_modal_create' || id === 'is_modal_join') {
         const cmd = client.commands.get('interserveur');
         if (cmd?.handleModal) await cmd.handleModal(interaction, client).catch(console.error);
@@ -311,6 +317,13 @@ module.exports = {
       // Préfixe hybride — menus du panneau /prefix
       if (interaction.customId.startsWith('pfxs_')) {
         const cmd = client.commands.get('prefix');
+        if (cmd?.handleSelect) await cmd.handleSelect(interaction).catch(console.error);
+        return;
+      }
+
+      // Règlement v2 — menus du panneau /reglement
+      if (interaction.customId.startsWith('regls_')) {
+        const cmd = client.commands.get('reglement');
         if (cmd?.handleSelect) await cmd.handleSelect(interaction).catch(console.error);
         return;
       }
@@ -486,6 +499,13 @@ module.exports = {
       if (id === 'reglement_accept') {
         const cmd = client.commands.get('reglement');
         if (cmd?.handleAccept) await cmd.handleAccept(interaction).catch(console.error);
+        return;
+      }
+
+      // Règlement v2 — boutons du panneau /reglement
+      if (id.startsWith('regl_')) {
+        const cmd = client.commands.get('reglement');
+        if (cmd?.handleButton) await cmd.handleButton(interaction).catch(console.error);
         return;
       }
 

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-28T18:29:50.746Z",
+  "generatedAt": "2026-09-28T19:50:43.318Z",
   "total": 107,
   "categories": [
     {
@@ -1150,32 +1150,11 @@
         },
         {
           "name": "reglement",
-          "description": "📜 Gérer le règlement interactif du serveur",
+          "description": "📜 Panneau de gestion complète du règlement (règles, apparence, publication)",
           "category": "configuration",
           "file": "src/commands/configuration/reglement.js",
           "defaultMemberPermissions": "32",
-          "subcommands": [
-            {
-              "name": "ajouter règle",
-              "description": "Texte de la règle",
-              "options": []
-            },
-            {
-              "name": "publier salon",
-              "description": "Salon",
-              "options": []
-            },
-            {
-              "name": "publier rôle_acceptation",
-              "description": "Rôle donné après acceptation",
-              "options": []
-            },
-            {
-              "name": "supprimer numéro",
-              "description": "Numéro de la règle",
-              "options": []
-            }
-          ],
+          "subcommands": [],
           "options": []
         },
         {
