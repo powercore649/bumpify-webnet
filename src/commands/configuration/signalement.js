@@ -71,7 +71,8 @@ function buildPanel(cfg, guild, note = null) {
   );
 
   const typeRow = new ActionRowBuilder().addComponents(
-    new StringSelectMenuBuilder().setCustomId('sigs_types').setPlaceholder('🧩 Types de signalement acceptés…').addOptions([
+    // maxValues = nombre d'options : les 2 peuvent être « default » simultanément
+    new StringSelectMenuBuilder().setCustomId('sigs_types').setPlaceholder('🧩 Types de signalement acceptés…').setMinValues(0).setMaxValues(2).addOptions([
       { label: 'Membres (mention / ID)', value: 'member', emoji: '👤', default: t.member },
       { label: 'Messages (lien ou ID)', value: 'message', emoji: '💬', default: t.message },
     ]),
