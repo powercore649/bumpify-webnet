@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-27T21:09:00.155Z",
-  "total": 105,
+  "generatedAt": "2026-09-28T16:12:33.309Z",
+  "total": 107,
   "categories": [
     {
       "label": "Bump & Réseau",
@@ -710,7 +710,7 @@
       "color": "#99AAB5",
       "desc": "Tout ce qu'il faut pour mettre Bumpify à votre image.",
       "key": "configuration",
-      "count": 25,
+      "count": 26,
       "commands": [
         {
           "name": "anniversaire-config",
@@ -1036,6 +1036,21 @@
           "file": "src/commands/configuration/leveling.js",
           "defaultMemberPermissions": "8",
           "subcommands": [],
+          "options": []
+        },
+        {
+          "name": "license",
+          "description": "🔑 Activer et gérer la licence de ce serveur",
+          "category": "configuration",
+          "file": "src/commands/configuration/license.js",
+          "defaultMemberPermissions": "8",
+          "subcommands": [
+            {
+              "name": "activer cle",
+              "description": "Clé reçue de l'owner (format BUMP-XXXX-XXXX-XXXX-XXXX)",
+              "options": []
+            }
+          ],
           "options": []
         },
         {
@@ -2303,7 +2318,7 @@
       "color": "#2C2F33",
       "desc": "Commandes réservées au(x) propriétaire(s) du bot.",
       "key": "owner",
-      "count": 3,
+      "count": 4,
       "commands": [
         {
           "name": "blacklist",
@@ -2329,6 +2344,51 @@
             },
             {
               "name": "info serveur_id",
+              "description": "ID du serveur",
+              "options": []
+            }
+          ],
+          "options": []
+        },
+        {
+          "name": "license-admin",
+          "description": "🔑 [Propriétaire uniquement] Générer et gérer les clés de licence",
+          "category": "owner",
+          "file": "src/commands/owner/license-admin.js",
+          "defaultMemberPermissions": null,
+          "subcommands": [
+            {
+              "name": "generer jours",
+              "description": "Durée de validité en jours (vide = illimitée)",
+              "options": []
+            },
+            {
+              "name": "generer note",
+              "description": "Note libre (ex: client #42)",
+              "options": []
+            },
+            {
+              "name": "liste filtre",
+              "description": "Filtrer les clés affichées",
+              "options": []
+            },
+            {
+              "name": "info cle",
+              "description": "Clé complète (BUMP-…) ou ID du serveur",
+              "options": []
+            },
+            {
+              "name": "revoquer cle",
+              "description": "Clé complète (BUMP-…)",
+              "options": []
+            },
+            {
+              "name": "revoquer raison",
+              "description": "Motif de la révocation",
+              "options": []
+            },
+            {
+              "name": "delier serveur_id",
               "description": "ID du serveur",
               "options": []
             }

@@ -2,6 +2,7 @@
 const { EmbedBuilder } = require('discord.js');
 const { COLORS } = require('../../utils/embeds');
 const blacklist = require('../../utils/blacklist');
+const licenseGate = require('../../utils/licenseGate');
 
 module.exports = {
   name: 'interactionCreate',
@@ -25,6 +26,23 @@ module.exports = {
     if (interaction.isChatInputCommand()) {
       const command = client.commands.get(interaction.commandName);
       if (!command) return;
+
+      // ── Garde-fou licence — systèmes phares réservés aux serveurs licenciés ──
+      if (interaction.inGuild() && licenseGate.isLicenseRequired(interaction.commandName)) {
+        const access = await licenseGate.checkAccess(interaction.guildId, interaction.commandName);
+        if (!access.ok) {
+          const lockEmbed = new EmbedBuilder()
+            .setColor(COLORS.warning)
+            .setTitle('🔒 Licence requise')
+            .setDescription(
+              `La commande \`/${interaction.commandName}\` fait partie du **système complet** Bumpify,\n` 
+              + 'réservé aux serveurs disposant d\'une clé de licence.\n\n'
+              + '🔑 Un administrateur peut l\'activer avec : `/license activer cle:BUMP-…`\n'
+              + '(clé fournie par l\'owner du bot) — voir `/license statut`.');
+          return interaction.reply({ embeds: [lockEmbed], ephemeral: true }).catch(() => {});
+        }
+      }
+
       try {
         await command.execute(interaction, client);
       } catch (err) {

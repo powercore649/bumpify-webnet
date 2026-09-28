@@ -24,6 +24,14 @@ module.exports = {
       console.error('blacklist init:', err.message);
     }
 
+    // ── Licences — amorce le cache des serveurs licenciés (bump, inter-serveur…) ──
+    try {
+      const licenseGate = require('../../utils/licenseGate');
+      await licenseGate.initCache();
+    } catch (err) {
+      console.error('licenseGate init:', err.message);
+    }
+
     // ── Emojis custom de l'application — synchro auto avec le Developer Portal ─
     syncApplicationEmojis(client).catch((err) => console.error('emojiSync:', err.message));
 

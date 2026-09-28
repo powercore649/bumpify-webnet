@@ -75,6 +75,7 @@ const CATEGORIES = {
       { name: '/config',      desc: 'Config bump (description, salons…) *(Admin)*' },
       { name: '/captcha',     desc: 'Système de vérification à l\'arrivée *(Admin)*' },
       { name: '/prefix',      desc: 'Préfixe de commandes personnalisé (système hybride b!commande) *(Admin)*' },
+      { name: '/license',     desc: 'Activer la clé de licence (système complet : bump, inter-serveur…) *(Admin)*' },
       { name: '/welcome',     desc: 'Bienvenue+ : panneau complet (message, image, MP, boutons, compteur, stats) *(Admin)*' },
       { name: '/farewell-set',desc: 'Au revoir : panneau complet (message, embed, image canvas) *(Admin)*' },
       { name: '/autorole',    desc: 'Rôles automatiques (join, niveau, ancienneté)' },
@@ -214,6 +215,7 @@ const CATEGORIES = {
     blurb: 'Commandes réservées aux propriétaires de Bumpify (pas aux admins de serveur).',
     commands: [
       { name: '/premium-admin', desc: 'Gérer le Premium d\'un serveur' },
+      { name: '/license-admin', desc: 'Générer et gérer les clés de licence 🔑' },
       { name: '/blacklist',     desc: 'Blacklist globale : aucun module ne répond sur ces serveurs ⛔' },
       { name: '/status',        desc: 'Configurer le statut affiché par le bot 🤖' },
       { name: '/forceleave',    desc: 'Force le bot à quitter un serveur' },

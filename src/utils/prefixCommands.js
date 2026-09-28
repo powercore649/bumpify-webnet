@@ -440,6 +440,24 @@ async function handlePrefixMessage(message, client) {
 
   const { command, json, rootOpts, groupName, subName, rest } = match;
 
+  // ── Garde-fou licence — mêmes règles qu'en slash ───────────────────────────
+  const { checkAccess, isLicenseRequired } = require('./licenseGate');
+  if (guildId && isLicenseRequired(json.name)) {
+    const access = await checkAccess(guildId, json.name);
+    if (!access.ok) {
+      await message.reply({
+        embeds: [new EmbedBuilder().setColor(COLORS.warning)
+          .setTitle('🔒 Licence requise')
+          .setDescription(
+            `La commande \`${cfg.prefix}${json.name}\` fait partie du **système complet** Bumpify,\n`
+            + 'réservé aux serveurs disposant d\'une clé de licence.\n\n'
+            + '🔑 Un administrateur peut l\'activer avec la commande slash : `/license activer cle:BUMP-…`\n'
+            + '(clé fournie par l\'owner du bot).')],
+      }).catch(() => {});
+      return true;
+    }
+  }
+
   // Sous-commandes multiples, aucune fournie
   if (!rootOpts) {
     const subs = (json.options || []).filter(o => o.type === 1).map(o => `\`${o.name}\``).join(', ');
