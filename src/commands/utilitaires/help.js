@@ -1,3 +1,15 @@
+'use strict';
+// commands/help.js — Centre d'aide Bumpify (v3)
+// ─────────────────────────────────────────────────────────────────────────────
+// Architecture :
+//   • 1 seule fabrique de composants (buildNav) = barre latérale identique sur
+//     tous les écrans → navigation cohérente (catégorie ↔ documentation ↔ accueil).
+//   • 1 boutique de composants (NAV) → jamais plus de 5 rangées par message.
+//   • Recherche enrichie : score (nom > description), raccourcis de catégorie,
+//     suggestion automatique vers la bonne catégorie.
+//   • Sécurité : seuls l'auteur de /help (ou un staff) peuvent naviguer.
+// Toutes les routes interactionCreate help_* sont conservées.
+
 const {
   SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder,
   ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle,
@@ -6,7 +18,9 @@ const { getAppEmoji } = require('../../utils/emojiSync');
 
 const SITE_URL    = 'https://zyntra.dpdns.org';
 const SUPPORT_URL = 'https://discord.gg/ts5mh326ew';
+const BRAND_COLOR = 0x5865F2;
 
+// ─── Catégories de commandes ─────────────────────────────────────────────────
 const CATEGORIES = {
   bump: {
     emoji: '🚀',
@@ -34,7 +48,7 @@ const CATEGORIES = {
   },
   moderation: {
     emoji: '🛡️',
-    label: 'Modération',
+    label: 'Modération & Sécurité',
     color: 0xED4245,
     blurb: 'Gardez votre serveur sain : sanctions, anti-raid, logs. `/ban`, `/kick`, `/raidmode` et `/forceleave` se verrouillent automatiquement derrière votre PIN si vous en avez configuré un via `/auth-profil`.',
     commands: [
@@ -54,6 +68,7 @@ const CATEGORIES = {
       { name: '/slowmode',desc: 'Définir le slowmode d\'un salon' },
       { name: '/raidmode',desc: 'Mode anti-raid d\'urgence, activation manuelle *(Admin)*' },
       { name: '/antiraid',     desc: 'Protection anti-raid complète : détection, quarantaine, honeypots, verrouillage *(Admin)*' },
+      { name: '/honeypot',     desc: 'Salon + bouton piège anti-bot — sanction automatique *(Admin)*' },
       { name: '/massrole',desc: 'Ajouter/retirer un rôle en masse' },
       { name: '/note',    desc: 'Notes privées sur un membre' },
       { name: '/logs',    desc: 'Journal de modération récent' },
@@ -258,9 +273,9 @@ const DOCS = {
   securite: {
     emoji: '🛡️',
     title: 'Sécuriser votre serveur',
-    related: ['/captcha', '/securite', '/honeypot', '/onboarding', '/raidmode'],
+    related: ['/captcha', '/securite', '/honeypot', '/onboarding', '/raidmode', '/antiraid'],
     body: [
-      '**Captcha** (`/captcha`) — vérification humaine à l\'arrivée, réglages fins (rôles, délai, salon).',
+      '**Captcha** (`/captcha`) — vérification humaine à l\'arrivée, réglages fins (rôles, délai, salon), niveaux anti-OCR.',
       '**Sécurité générale** (`/securite`) — dashboard tout-en-un : anti-spam, anti-raid, anti-liens.',
       '**Honeypot** (`/honeypot`) — salon et bouton piège : quiconque écrit dedans ou clique dessus est sanctionné automatiquement (mute/kick/ban).',
       '**Portail d\'accès** (`/onboarding`) — pose des questions obligatoires avant de donner accès au serveur, avec expulsion automatique si personne ne répond dans le délai.',
@@ -326,6 +341,51 @@ const DOCS = {
   },
 };
 
+// ─── Boutiques de composants (jamais > 5 rangées / 5 composants par rangée) ──
+const NAV = {
+  selectCategories(activeKey = null) {
+    const options = Object.entries(CATEGORIES).map(([key, cat]) => ({
+      label: cat.label, value: key, emoji: cat.emoji,
+      description: `${cat.commands.length} commande${cat.commands.length > 1 ? 's' : ''}`,
+      default: key === activeKey,
+    }));
+    return new ActionRowBuilder().addComponents(
+      new StringSelectMenuBuilder().setCustomId('help_category')
+        .setPlaceholder('📂 Choisir une catégorie…').addOptions(options),
+    );
+  },
+  selectDocs(activeKey = null) {
+    const options = Object.entries(DOCS).map(([key, doc]) => ({
+      label: doc.title, value: key, emoji: doc.emoji, default: key === activeKey,
+    }));
+    return new ActionRowBuilder().addComponents(
+      new StringSelectMenuBuilder().setCustomId('help_docs')
+        .setPlaceholder('📚 Documentation avancée…').addOptions(options),
+    );
+  },
+  actions(mode = 'home') {
+    return new ActionRowBuilder().addComponents(
+      mode === 'home'
+        ? new ButtonBuilder().setCustomId('help_whatsnew').setLabel('Nouveautés').setEmoji('🆕').setStyle(ButtonStyle.Success)
+        : new ButtonBuilder().setCustomId('help_home').setLabel('Accueil').setEmoji('🏠').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('help_search').setLabel('Rechercher').setEmoji('🔍').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('help_random').setLabel('Découvrir').setEmoji('🎲').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setLabel('Site web').setEmoji('🌐').setStyle(ButtonStyle.Link).setURL(SITE_URL),
+      new ButtonBuilder().setLabel('Support').setEmoji('💬').setStyle(ButtonStyle.Link).setURL(SUPPORT_URL),
+    );
+  },
+};
+
+// Barre latérale complète : 3 rangées identiques sur tous les écrans.
+function buildNav({ categoryKey = null, docKey = null, home = false } = {}) {
+  return [
+    NAV.selectCategories(categoryKey),
+    NAV.selectDocs(docKey),
+    NAV.actions(home ? 'home' : 'page'),
+  ];
+}
+
+// ─── Écrans ──────────────────────────────────────────────────────────────────
 function formatUptime(ms) {
   const s = Math.floor(ms / 1000);
   const d = Math.floor(s / 86400);
@@ -336,133 +396,173 @@ function formatUptime(ms) {
   return `${m}m`;
 }
 
-// ─── Page d'accueil ───────────────────────────────────────────────────────────
 function buildMainEmbed(client) {
-  const grid = Object.values(CATEGORIES)
-    .map(c => `${c.emoji} **${c.label}**\n╰ ${c.commands.length} commande${c.commands.length > 1 ? 's' : ''}`);
-
   const eRocket = getAppEmoji(client, 'bumpify_rocket') || '🚀';
+  const cats = Object.values(CATEGORIES);
+  const half = Math.ceil(cats.length / 2);
+  const col = list => list.map(c => `${c.emoji} **${c.label}** — \`${c.commands.length}\``).join('\n');
 
-  const embed = new EmbedBuilder()
-    .setColor(0x5865F2)
+  return new EmbedBuilder()
+    .setColor(BRAND_COLOR)
     .setAuthor({ name: 'Bumpify — Centre d\'aide', iconURL: client.user.displayAvatarURL() })
     .setTitle('📖 Comment puis-je vous aider ?')
     .setDescription(
       `> Faites découvrir votre serveur en le bumpant toutes les **2 heures** ! ${eRocket}\n` +
       '> Vos bumps sont diffusés dans le salon feed de **tout le réseau Bumpify**.\n\n' +
-      `Sélectionnez une catégorie dans le menu ci-dessous pour explorer les **${TOTAL_COMMANDS} commandes** disponibles, ou utilisez les boutons pour chercher une commande précise.`
+      `Explorez les **${TOTAL_COMMANDS} commandes** via le menu des catégories, ou plongez dans la **documentation avancée** (${Object.keys(DOCS).length} articles) avec le second menu.`,
     )
     .setThumbnail(client.user.displayAvatarURL({ size: 256 }))
     .addFields(
-      { name: '​', value: grid.slice(0, Math.ceil(grid.length / 2)).join('\n\n'), inline: true },
-      { name: '​', value: grid.slice(Math.ceil(grid.length / 2)).join('\n\n'), inline: true },
+      { name: '🗂️ Catégories', value: col(cats.slice(0, half)), inline: true },
+      { name: '​', value: col(cats.slice(half)), inline: true },
+      {
+        name: '⚡ Démarrage rapide',
+        value: [
+          '`1.` `/panel` — vue complète de la configuration',
+          '`2.` `/config` — décrivez votre serveur',
+          '`3.` `/captcha` — protégez les arrivées',
+          '`4.` `/bump` — rejoignez le réseau !',
+        ].join('\n'),
+        inline: true,
+      },
+      {
+        name: '🛡️ Sécurité express',
+        value: '`/captcha` vérification humaine\n`/antiraid` protection raid complète\n`/honeypot` salon + bouton piège',
+        inline: true,
+      },
+      {
+        name: '📊 En ce moment',
+        value: `**${client.guilds.cache.size.toLocaleString()}** serveurs · **${client.guilds.cache.reduce((n, g) => n + g.memberCount, 0).toLocaleString()}** membres · en ligne depuis **${formatUptime(client.uptime)}**`,
+        inline: true,
+      },
     )
-    .addFields({
-      name: '⚡ Démarrage rapide',
-      value: '`1.` `/panel` → vue complète de la configuration\n`2.` `/config` → décrivez votre serveur\n`3.` `/captcha` → protégez les arrivées\n`4.` `/bump` → rejoignez le réseau !',
-    })
-    .addFields({
-      name: '📊 En ce moment',
-      value: `${client.guilds.cache.size.toLocaleString()} serveurs · ${client.guilds.cache.reduce((n, g) => n + g.memberCount, 0).toLocaleString()} membres · en ligne depuis ${formatUptime(client.uptime)}`,
-    })
-    .addFields({
-      name: '📚 Documentation avancée',
-      value: `${Object.keys(DOCS).length} articles détaillés — permissions, sécurité, portail d'accès, dépannage, FAQ... Utilisez le second menu ci-dessous.`,
-    })
-    .setFooter({ text: `Bumpify • ${TOTAL_COMMANDS} commandes au total` })
+    .setFooter({ text: `Bumpify • ${TOTAL_COMMANDS} commandes • ${Object.keys(DOCS).length} articles de documentation` })
     .setTimestamp();
-
-  return embed;
 }
 
-// ─── Page de catégorie ────────────────────────────────────────────────────────
 function buildCategoryEmbed(client, key) {
   const cat = CATEGORIES[key];
   const half = Math.ceil(cat.commands.length / 2);
-  const col1 = cat.commands.slice(0, half).map(c => `\`${c.name}\`\n╰ *${c.desc}*`).join('\n\n');
-  const col2 = cat.commands.slice(half).map(c => `\`${c.name}\`\n╰ *${c.desc}*`).join('\n\n');
+  const col = list => list.map(c => `\`${c.name}\`\n╰ *${c.desc}*`).join('\n\n');
 
   const embed = new EmbedBuilder()
     .setColor(cat.color)
     .setAuthor({ name: 'Bumpify — Centre d\'aide', iconURL: client.user.displayAvatarURL() })
     .setTitle(`${cat.emoji} ${cat.label}`)
     .setDescription(`*${cat.blurb}*`)
-    .addFields({ name: '​', value: col1 || '​', inline: true });
+    .addFields({ name: '​', value: col(cat.commands.slice(0, half)) || '​', inline: true });
 
-  if (col2) embed.addFields({ name: '​', value: col2, inline: true });
+  if (half < cat.commands.length) {
+    embed.addFields({ name: '​', value: col(cat.commands.slice(half)), inline: true });
+  }
 
-  embed
-    .setFooter({ text: `Bumpify • ${cat.commands.length} commande${cat.commands.length > 1 ? 's' : ''} dans cette catégorie` })
+  return embed
+    .setFooter({ text: `Bumpify • ${cat.commands.length} commande${cat.commands.length > 1 ? 's' : ''} • ${cat.label}` })
     .setTimestamp();
-
-  return embed;
 }
 
-// ─── Page d'article de documentation ───────────────────────────────────────
 function buildDocEmbed(client, key) {
   const doc = DOCS[key];
-  const related = doc.related?.length ? `\n\n**Commandes liées :** ${doc.related.map(c => `\`${c}\``).join(', ')}` : '';
+  const related = doc.related?.length ? `\n\n**Commandes liées :** ${doc.related.map(c => `\`${c}\``).join(' · ')}` : '';
   return new EmbedBuilder()
-    .setColor(0x5865F2)
+    .setColor(BRAND_COLOR)
     .setAuthor({ name: 'Bumpify — Documentation', iconURL: client.user.displayAvatarURL() })
     .setTitle(`${doc.emoji} ${doc.title}`)
     .setDescription(doc.body + related)
-    .setFooter({ text: 'Bumpify • Centre de documentation' });
+    .setFooter({ text: `Bumpify • Documentation • ${Object.keys(DOCS).length} articles` });
 }
 
-function buildDocsSelectMenu(activeKey = null) {
-  const options = Object.entries(DOCS).map(([key, doc]) => ({
-    label: doc.title, value: key, emoji: doc.emoji, default: key === activeKey,
-  }));
-  return new ActionRowBuilder().addComponents(
-    new StringSelectMenuBuilder().setCustomId('help_docs').setPlaceholder('📚 Documentation avancée…').addOptions(options),
-  );
+// ─── Recherche (bouton + modale) ─────────────────────────────────────────────
+const CATEGORY_ALIASES = {
+  bump: 'bump', 'bump & réseau': 'bump', reseau: 'bump', réseau: 'bump',
+  moderation: 'moderation', modération: 'moderation', securite: 'moderation', sécurité: 'moderation',
+  config: 'config', configuration: 'config',
+  economy: 'economy', economie: 'economy', économie: 'economy', jeux: 'economy',
+  xp: 'xp', niveaux: 'xp',
+  community: 'community', communaute: 'community', communauté: 'community',
+  utility: 'utility', utilitaires: 'utility', utils: 'utility',
+  fun: 'fun', owner: 'owner', proprietaire: 'owner', propriétaire: 'owner', bot: 'owner',
+};
+
+function searchHelp(query) {
+  const q = query.toLowerCase().trim();
+
+  // 1) Raccourci : nom exact d'une catégorie → on oriente vers la catégorie
+  const aliasKey = CATEGORY_ALIASES[q];
+  if (aliasKey && CATEGORIES[aliasKey]) return { redirectCategory: aliasKey, commands: [], docs: [] };
+
+  // 2) Recherche plein texte avec score : nom > préfixe de nom > description
+  const scored = ALL_COMMANDS_FLAT
+    .map(c => {
+      const name = c.name.toLowerCase();
+      let score = 0;
+      if (name === q) score = 100;
+      else if (name.startsWith(q) || name.includes(` ${q}`)) score = 60;
+      else if (name.includes(q)) score = 40;
+      else if (c.desc.toLowerCase().includes(q)) score = 20;
+      return { c, score };
+    })
+    .filter(x => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10);
+
+  const docMatches = Object.entries(DOCS)
+    .filter(([, d]) => d.title.toLowerCase().includes(q) || d.body.toLowerCase().includes(q))
+    .slice(0, 5);
+
+  return { commands: scored.map(x => x.c), docs: docMatches };
 }
 
+function buildSearchResultEmbed(query, results) {
+  const { commands, docs } = results;
+  const embed = new EmbedBuilder().setColor(BRAND_COLOR).setTitle(`🔍 Résultats pour « ${query} »`);
 
-function buildSelectMenu(activeKey = null) {
-  const options = Object.entries(CATEGORIES).map(([key, cat]) => ({
-    label: cat.label,
-    value: key,
-    emoji: cat.emoji,
-    description: `${cat.commands.length} commandes`,
-    default: key === activeKey,
-  }));
-  return new ActionRowBuilder().addComponents(
-    new StringSelectMenuBuilder().setCustomId('help_category').setPlaceholder('📂 Choisir une catégorie…').addOptions(options),
-  );
+  if (commands.length) {
+    embed.addFields({
+      name: '⚙️ Commandes',
+      value: commands.map(c => `${c.categoryEmoji} \`${c.name}\`\n╰ *${c.desc}* — ${c.categoryLabel}`).join('\n\n'),
+    });
+  }
+  if (docs.length) {
+    embed.addFields({
+      name: '📚 Documentation',
+      value: docs.map(([, d]) => `${d.emoji} **${d.title}**`).join('\n') + '\n\n*Ouvrez-les via le menu « Documentation avancée ».*',
+    });
+  }
+
+  // Suggestion intelligente : si plein de résultats viennent d'une même catégorie
+  const byCat = {};
+  commands.forEach(c => { byCat[c.categoryKey] = (byCat[c.categoryKey] || 0) + 1; });
+  const topCat = Object.entries(byCat).sort((a, b) => b[1] - a[1])[0];
+  if (topCat && topCat[1] >= 3 && commands.length <= 5) {
+    const cat = CATEGORIES[topCat[0]];
+    embed.addFields({
+      name: '💡 Bon à savoir',
+      value: `La plupart de ces commandes vivent dans **${cat.emoji} ${cat.label}** — sélectionnez-la dans le menu ci-dessous.`,
+    });
+  }
+
+  embed.setFooter({ text: `${commands.length + docs.length} résultat(s) • Astuce : tapez un nom exact comme « bump » pour aller plus vite` });
+  return embed;
 }
 
-// v2 — mis en avant sur la page d'accueil du help pour rendre visibles les
-// fonctionnalités récemment ajoutées (autrement noyées dans la liste).
+// ─── Nouveautés ──────────────────────────────────────────────────────────────
 const WHATS_NEW = [
+  { name: '/antiraid', desc: 'Protection anti-raid complète : détection en temps réel, quarantaine automatique, honeypots, verrouillage d\'urgence et statut en direct.' },
   { name: '/notifications mes-notifications', desc: 'Fil personnel de notifications — un message DM qui s\'actualise tout seul à chaque nouvelle notification, sans rien recharger.' },
-  { name: '/forumwelcome panel',              desc: 'Message d\'accueil automatique et personnalisable, posté à chaque nouveau post dans vos salons Forum (titre, texte, bouton lien, épinglage).' },
-  { name: '/status',                          desc: 'Personnalisez le statut Discord affiché par le bot (type d\'activité, texte, présence) *(Propriétaire)*.' },
+  { name: '/forumwelcome panel', desc: 'Message d\'accueil automatique et personnalisable, posté à chaque nouveau post dans vos salons Forum.' },
+  { name: '/status', desc: 'Personnalisez le statut Discord affiché par le bot *(Propriétaire)*.' },
 ];
 
-function buildActionRow(showHome = false) {
-  const row = new ActionRowBuilder();
-  row.addComponents(
-    showHome
-      ? new ButtonBuilder().setCustomId('help_home').setLabel('Accueil').setEmoji('🏠').setStyle(ButtonStyle.Secondary)
-      : new ButtonBuilder().setCustomId('help_whatsnew').setLabel('Nouveautés').setEmoji('🆕').setStyle(ButtonStyle.Success),
-    new ButtonBuilder().setCustomId('help_search').setLabel('Rechercher').setEmoji('🔍').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId('help_random').setLabel('Découvrir').setEmoji('🎲').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setLabel('Site web').setEmoji('🌐').setStyle(ButtonStyle.Link).setURL(SITE_URL),
-    new ButtonBuilder().setLabel('Support').setEmoji('💬').setStyle(ButtonStyle.Link).setURL(SUPPORT_URL),
-  );
-  return row;
-}
-
-// Vérifie que seul l'auteur de la commande /help d'origine peut utiliser les
-// composants (select/boutons) — nécessaire maintenant que le panel est public
-// et visible par tout le salon, pas juste par celui qui l'a ouvert.
+// ─── Autorisation : auteur de /help ou staff ────────────────────────────────
 function isOwner(interaction) {
   const ownerId = interaction.message?.interactionMetadata?.user?.id
     ?? interaction.message?.interaction?.user?.id
     ?? null;
-  return !ownerId || ownerId === interaction.user.id;
+  // Pas d'auteur identifiable (anciens messages) OU l'auteur lui-même OU un staff
+  return !ownerId
+    || ownerId === interaction.user.id
+    || interaction.member?.permissions?.has?.('ManageGuild');
 }
 
 async function rejectNotOwner(interaction) {
@@ -472,16 +572,14 @@ async function rejectNotOwner(interaction) {
   });
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
 module.exports = {
   data: new SlashCommandBuilder().setName('help').setDescription('📖 Afficher l\'aide complète de Bumpify'),
 
   async execute(interaction) {
-    // v2 : le panel est désormais public (visible par tout le salon), donc
-    // on protège les composants (voir isOwner) pour que seul l'auteur original
-    // puisse naviguer dedans — les autres peuvent lancer leur propre /help.
     await interaction.reply({
       embeds: [buildMainEmbed(interaction.client)],
-      components: [buildSelectMenu(), buildDocsSelectMenu(), buildActionRow(false)],
+      components: buildNav({ home: true }),
     });
   },
 
@@ -491,18 +589,17 @@ module.exports = {
     if (!CATEGORIES[key]) return;
     await interaction.update({
       embeds: [buildCategoryEmbed(interaction.client, key)],
-      components: [buildSelectMenu(key), buildDocsSelectMenu(), buildActionRow(true)],
+      components: buildNav({ categoryKey: key }),
     });
   },
 
-  // 📚 Documentation avancée — articles longs, indépendants des catégories de commandes
   async handleDocsSelect(interaction) {
     if (!isOwner(interaction)) return rejectNotOwner(interaction);
     const key = interaction.values[0];
     if (!DOCS[key]) return;
     await interaction.update({
       embeds: [buildDocEmbed(interaction.client, key)],
-      components: [buildSelectMenu(), buildDocsSelectMenu(key), buildActionRow(true)],
+      components: buildNav({ docKey: key }),
     });
   },
 
@@ -510,12 +607,10 @@ module.exports = {
     if (!isOwner(interaction)) return rejectNotOwner(interaction);
     await interaction.update({
       embeds: [buildMainEmbed(interaction.client)],
-      components: [buildSelectMenu(), buildDocsSelectMenu(), buildActionRow(false)],
+      components: buildNav({ home: true }),
     });
   },
 
-  // 🔍 Recherche — ouvre une modale, résultat envoyé en privé (ephemeral) à
-  // celui qui cherche, pour ne pas polluer le salon avec des résultats perso.
   async handleSearchButton(interaction) {
     if (!isOwner(interaction)) return rejectNotOwner(interaction);
     const modal = new ModalBuilder().setCustomId('help_search_modal').setTitle('Rechercher une commande');
@@ -531,46 +626,29 @@ module.exports = {
   },
 
   async handleSearchModal(interaction) {
-    const query = interaction.fields.getTextInputValue('help_search_query').trim().toLowerCase();
-    const matches = ALL_COMMANDS_FLAT.filter(
-      c => c.name.toLowerCase().includes(query) || c.desc.toLowerCase().includes(query)
-    ).slice(0, 10);
+    const query = interaction.fields.getTextInputValue('help_search_query').trim();
+    const results = searchHelp(query);
 
-    const docMatches = Object.entries(DOCS).filter(
-      ([, d]) => d.title.toLowerCase().includes(query) || d.body.toLowerCase().includes(query)
-    ).slice(0, 5);
-
-    if (matches.length === 0 && docMatches.length === 0) {
+    // Raccourci catégorie → mini-panel éphémère directement positionné dessus
+    if (results.redirectCategory) {
+      const key = results.redirectCategory;
       return interaction.reply({
-        content: `🔍 Aucun résultat pour \`${query}\`. Essaie un autre mot-clé !`,
+        embeds: [buildCategoryEmbed(interaction.client, key)],
+        components: buildNav({ categoryKey: key }),
         ephemeral: true,
       });
     }
 
-    const embed = new EmbedBuilder()
-      .setColor(0x5865F2)
-      .setTitle(`🔍 Résultats pour « ${query} »`);
-
-    if (matches.length) {
-      embed.addFields({
-        name: '⚙️ Commandes',
-        value: matches.map(c => `${c.categoryEmoji} \`${c.name}\`\n╰ *${c.desc}* — ${c.categoryLabel}`).join('\n\n'),
-      });
-    }
-    if (docMatches.length) {
-      embed.addFields({
-        name: '📚 Documentation',
-        value: docMatches.map(([, d]) => `${d.emoji} **${d.title}**`).join('\n'),
+    if (results.commands.length === 0 && results.docs.length === 0) {
+      return interaction.reply({
+        content: `🔍 Aucun résultat pour \`${query}\`. Essaie un autre mot-clé — ou utilise \`/panel\` pour parcourir tous les modules !`,
+        ephemeral: true,
       });
     }
 
-    embed.setFooter({ text: `${matches.length + docMatches.length} résultat(s) trouvé(s)` });
-
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [buildSearchResultEmbed(query, results)], ephemeral: true });
   },
 
-  // 🎲 Découvrir — met en avant une commande aléatoire, en privé (pour ne pas
-  // spammer le salon à chaque clic).
   async handleRandomButton(interaction) {
     if (!isOwner(interaction)) return rejectNotOwner(interaction);
     const pick = ALL_COMMANDS_FLAT[Math.floor(Math.random() * ALL_COMMANDS_FLAT.length)];
@@ -582,15 +660,12 @@ module.exports = {
     await interaction.reply({ embeds: [embed], ephemeral: true });
   },
 
-  // 🆕 Nouveautés — met en avant les fonctionnalités récemment ajoutées.
   async handleWhatsNew(interaction) {
     if (!isOwner(interaction)) return rejectNotOwner(interaction);
     const embed = new EmbedBuilder()
       .setColor(0x57F287)
       .setTitle('🆕 Nouveautés')
-      .setDescription(
-        WHATS_NEW.map(f => `\`${f.name}\`\n╰ *${f.desc}*`).join('\n\n')
-      )
+      .setDescription(WHATS_NEW.map(f => `\`${f.name}\`\n╰ *${f.desc}*`).join('\n\n'))
       .setFooter({ text: 'Ces commandes sont aussi listées dans leur catégorie habituelle.' });
     await interaction.reply({ embeds: [embed], ephemeral: true });
   },

@@ -75,6 +75,8 @@ honeypotSchema.index({ guildId: 1, channelId: 1 }, { unique: true });
 
 module.exports = {
   MODES,
-  AntiRaid:    mongoose.model('AntiRaid', antiRaidSchema),
-  Honeypot:    mongoose.model('Honeypot', honeypotSchema),
+  AntiRaid:        mongoose.models.AntiRaid        || mongoose.model('AntiRaid', antiRaidSchema),
+  // ⚠️ Nom distinct de models/Honeypot.js (salon + bouton piège autonome) :
+  // mongoose n'autorise qu'un modèle par nom — les deux systèmes coexistent.
+  AntiRaidHoneypot: mongoose.models.AntiRaidHoneypot || mongoose.model('AntiRaidHoneypot', honeypotSchema),
 };

@@ -369,6 +369,13 @@ module.exports = {
     if (interaction.isButton()) {
       const id = interaction.customId;
 
+      // Honeypot v3 — panel interactif (routage persistant, survive à l'expiration du collecteur)
+      if (id.startsWith('_hp_')) {
+        const cmd = client.commands.get('honeypot');
+        if (cmd?.handleButton) await cmd.handleButton(interaction, client).catch(console.error);
+        return;
+      }
+
       // Panneau sécurité — tous les boutons commençant par sec_ sont gérés par le collecteur interne
       if (id.startsWith('sec_')) return;
 
@@ -607,29 +614,12 @@ module.exports = {
         return;
       }
 
-      // Help — guide de démarrage pas-à-pas
-      if (id === 'help_guide_start') {
+      // Help v3 — nouveautés, recherche et découverte aléatoire
+      if (id === 'help_whatsnew') {
         const cmd = client.commands.get('help');
-        if (cmd?.handleGuideStart) await cmd.handleGuideStart(interaction).catch(console.error);
+        if (cmd?.handleWhatsNew) await cmd.handleWhatsNew(interaction).catch(console.error);
         return;
       }
-      if (id === 'help_guide_prev') {
-        const cmd = client.commands.get('help');
-        if (cmd?.handleGuideStep) await cmd.handleGuideStep(interaction, -1).catch(console.error);
-        return;
-      }
-      if (id === 'help_guide_next') {
-        const cmd = client.commands.get('help');
-        if (cmd?.handleGuideStep) await cmd.handleGuideStep(interaction, 1).catch(console.error);
-        return;
-      }
-      if (id === 'help_guide_exit') {
-        const cmd = client.commands.get('help');
-        if (cmd?.handleGuideExit) await cmd.handleGuideExit(interaction).catch(console.error);
-        return;
-      }
-
-      // Help v2 — recherche et découverte aléatoire
       if (id === 'help_search') {
         const cmd = client.commands.get('help');
         if (cmd?.handleSearchButton) await cmd.handleSearchButton(interaction).catch(console.error);
@@ -772,11 +762,6 @@ module.exports = {
         if (cmd?.handleDocsSelect) await cmd.handleDocsSelect(interaction).catch(console.error);
         return;
       }
-      if (id === 'help_guide_nav') {
-        const cmd = client.commands.get('help');
-        if (cmd?.handleGuideNav) await cmd.handleGuideNav(interaction).catch(console.error);
-        return;
-      }
       if (id === 'faq_select') {
         const cmd = client.commands.get('faq');
         if (cmd?.handleSelect) await cmd.handleSelect(interaction).catch(console.error);
@@ -835,6 +820,14 @@ module.exports = {
     // ── SelectMenu génériques (gérés par collecteurs internes) ───────────
     if (interaction.isAnySelectMenu()) {
       const id = interaction.customId;
+
+      // Honeypot v3 — tous les menus du panel (string + channel selects, routage persistant)
+      if (id.startsWith('_hp_')) {
+        const cmd = client.commands.get('honeypot');
+        if (cmd?.handleSelect) await cmd.handleSelect(interaction, client).catch(console.error);
+        return;
+      }
+
       const internalIds = [
         'ticket_set_category','ticket_set_log','ticket_set_role','ticket_config_action','ticket_back','ticket_noop',
         'config_category','config_language','config_bump_channel','config_feed_channel','config_log_channel','config_bump_role',

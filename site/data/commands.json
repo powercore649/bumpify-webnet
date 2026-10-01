@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-01T17:41:40.847Z",
+  "generatedAt": "2026-10-01T18:42:53.716Z",
   "total": 107,
   "categories": [
     {
@@ -411,7 +411,7 @@
         },
         {
           "name": "honeypot",
-          "description": "🍯 Configurer le salon piège anti-bot / anti-token-grabber",
+          "description": "🍯 Configurer le salon + bouton piège anti-bot / anti-token-grabber",
           "category": "moderation",
           "file": "src/commands/moderation/honeypot.js",
           "defaultMemberPermissions": "8",

@@ -17,7 +17,6 @@ const roots = [
   ['événements', path.join(__dirname, '..', 'src', 'events')],
   ['utils', path.join(__dirname, '..', 'src', 'utils')],
   ['models', path.join(__dirname, '..', 'src', 'models')],
-  ['web', path.join(__dirname, '..', 'src', 'web')],
 ];
 
 let ok = 0, ko = 0;

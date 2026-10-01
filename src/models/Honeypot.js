@@ -1,7 +1,9 @@
 const mongoose = require('mongoose');
 
-// Configuration du système Honeypot (salon piège anti-bot / anti-token-grabber).
-// Tout message envoyé dans un salon piège entraîne une sanction automatique.
+// Configuration du système Honeypot (salon + bouton piège anti-bot / anti-token-grabber).
+// Tout message envoyé dans un salon piège (ou clic sur le bouton piège) entraîne
+// une sanction automatique. Indépendant des honeypots de l'anti-raid
+// (models/AntiRaid.js — modèle 'AntiRaidHoneypot').
 const honeypotSchema = new mongoose.Schema({
   guildId:       { type: String,  required: true, unique: true },
   enabled:       { type: Boolean, default: false },
@@ -24,6 +26,9 @@ const honeypotSchema = new mongoose.Schema({
     type: String,
     default: "⚠️ **Avertissement**\nN'envoyez pas de messages dans ce salon. Ce salon est conçu afin de piéger les bots de spam et les token grabbers. Tout message envoyé ici entraînera automatiquement un mute d'une semaine."
   },
+
+  // Libellé du bouton piège publié dans les salons (personnalisable)
+  triggerLabel: { type: String, default: '✅ Confirmer avoir lu' },
 
   // Statistiques
   totalTriggered: { type: Number, default: 0 },

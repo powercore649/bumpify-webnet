@@ -15,7 +15,7 @@ module.exports = {
     // ── Anti-raid : honeypots — écrire dans un salon-piège = bot confirmé ──
     if (message.guild && !message.author.bot) {
       try {
-        const Honeypot = require('../../models/AntiRaid').Honeypot;
+        const Honeypot = require('../../models/AntiRaid').AntiRaidHoneypot;
         const hp = await Honeypot.findOne({ guildId: message.guild.id, channelId: message.channel.id });
         if (hp) {
           const { triggerHoneypot } = require('../../utils/antiraidActions');

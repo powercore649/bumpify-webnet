@@ -22,7 +22,7 @@ const {
   PermissionFlagsBits,
   ChannelType,
 } = require('discord.js');
-const { AntiRaid, Honeypot, MODES } = require('../../models/AntiRaid');
+const { AntiRaid, AntiRaidHoneypot: Honeypot, MODES } = require('../../models/AntiRaid');
 const {
   getConfig, lockAll, endRaid, releaseQuarantine, sendHoneypotMessage,
   logAction, logEmbed, HONEYPOT_MSG,

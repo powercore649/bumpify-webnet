@@ -18,6 +18,15 @@ const { COLORS } = require('../../utils/embeds');
 
 const CHANGELOG = [
   {
+    version: '📖 Centre d\'aide & 🍯 Honeypot refondus',
+    date: 'octobre 2026',
+    changes: [
+      '**`/help` entièrement repensé** — accueil épuré, navigation unifiée catégories ↔ documentation (les menus restent accessibles sur tous les écrans), recherche améliorée avec raccourcis de catégorie et suggestion intelligente, bouton Nouveautés désormais fonctionnel',
+      '**`/honeypot` refondu à 100 %** — panel interactif en un seul écran : sanction et durée au menu (mute 1h→28j, kick, ban), salons pièges en multi-select, toggles suppression/DM, message d\'avertissement **et libellé du bouton piège** personnalisables, statistiques enrichies (24h/7j/30j, historique)',
+      '**Bug critique corrigé** — conflit interne de modèles de données entre l\'anti-raid et le honeypot qui empêchait le bot de démarrer ; les deux systèmes de pièges restent totalement indépendants',
+    ],
+  },
+  {
     version: '🛡️ Protection anti-raid complète & Captcha refondu',
     date: 'octobre 2026',
     changes: [

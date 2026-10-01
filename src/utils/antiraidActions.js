@@ -5,7 +5,7 @@
 // Toute la logique de décision pure vit dans utils/antiraidEngine.js.
 
 const { EmbedBuilder } = require('discord.js');
-const { AntiRaid, Honeypot } = require('../models/AntiRaid');
+const { AntiRaid, AntiRaidHoneypot: Honeypot } = require('../models/AntiRaid');
 const { CaptchaConfig } = require('../models/Captcha');
 const {
   detectRaid, assessJoin, recordWaveJoin, isWaveRaid, decideResponse,

@@ -82,7 +82,7 @@ Module._resolveFilename = function (request, ...args) {
 const arModelPath = require.resolve('../src/models/AntiRaid');
 require.cache[arModelPath] = {
   id: arModelPath, filename: arModelPath, loaded: true,
-  exports: { MODES: ['monitor', 'normal', 'strict'], AntiRaid: AntiRaidMock, Honeypot: HoneypotMock },
+  exports: { MODES: ['monitor', 'normal', 'strict'], AntiRaid: AntiRaidMock, AntiRaidHoneypot: HoneypotMock },
 };
 const capModelPath = require.resolve('../src/models/Captcha');
 require.cache[capModelPath] = {
