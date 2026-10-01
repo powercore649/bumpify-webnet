@@ -86,12 +86,6 @@ module.exports = {
         if (cmd?.handleModal) await cmd.handleModal(interaction).catch(console.error);
         return;
       }
-      // Suggestion v2 — modaux du panneau (anti-abus, seuils)
-      if (id.startsWith('sugm_modal_')) {
-        const cmd = client.commands.get('suggestion');
-        if (cmd?.handleModal) await cmd.handleModal(interaction, client).catch(console.error);
-        return;
-      }
       if (id.startsWith('avispanel_')) {
         const cmd = client.commands.get('avis-panel');
         if (cmd?.handleModal) await cmd.handleModal(interaction).catch(console.error);
@@ -151,6 +145,12 @@ module.exports = {
       // Signalement — modaux (étape 2 : détails)
       if (id.startsWith('sigm_submit')) {
         const cmd = client.commands.get('signalement');
+        if (cmd?.handleModal) await cmd.handleModal(interaction, client).catch(console.error);
+        return;
+      }
+      // Anti-raid — modaux du panneau /antiraid
+      if (id.startsWith('armm_')) {
+        const cmd = client.commands.get('antiraid');
         if (cmd?.handleModal) await cmd.handleModal(interaction, client).catch(console.error);
         return;
       }
@@ -328,13 +328,6 @@ module.exports = {
         return;
       }
 
-      // Suggestion v2 — menus du panneau de configuration
-      if (interaction.customId.startsWith('sugc_')) {
-        const cmd = client.commands.get('suggestion');
-        if (cmd?.handleSelect) await cmd.handleSelect(interaction, client).catch(console.error);
-        return;
-      }
-
       // Règlement v2 — menus du panneau /reglement
       if (interaction.customId.startsWith('regls_')) {
         const cmd = client.commands.get('reglement');
@@ -351,6 +344,13 @@ module.exports = {
       if (interaction.customId.startsWith('sigr_')) {
         const cmd = client.commands.get('signalement');
         if (cmd?.handleReasonMenu) await cmd.handleReasonMenu(interaction).catch(console.error);
+        return;
+      }
+
+      // Anti-raid — menus du panneau /antiraid
+      if (interaction.customId.startsWith('arms_')) {
+        const cmd = client.commands.get('antiraid');
+        if (cmd?.handleSelect) await cmd.handleSelect(interaction, client).catch(console.error);
         return;
       }
     }
@@ -375,12 +375,6 @@ module.exports = {
       // Pagination Twitch — gérée par le collecteur interne de la commande
       if (id.startsWith('twpage_')) return;
 
-      // Suggestion v2 — boutons du panneau de config (sugc_) + modération persistante (sugm_)
-      if (id.startsWith('sugc_') || id.startsWith('sugm_')) {
-        const cmd = client.commands.get('suggestion');
-        if (cmd?.handleButton) await cmd.handleButton(interaction, client).catch(console.error);
-        return;
-      }
 
       // Panel d'avis, stats en direct, navigation "voir" — gérés par les collecteurs internes de avis.js
       if (id.startsWith('avispanel_') || id.startsWith('avisstats_') || id.startsWith('avis_prev') || id.startsWith('avis_next') || id.startsWith('avis_close') || id.startsWith('avis_helpful_') || id.startsWith('avis_report') || id.startsWith('avis_reply')) return;
@@ -546,6 +540,13 @@ module.exports = {
         return;
       }
 
+      // Anti-raid — boutons du panneau /antiraid
+      if (id.startsWith('arm_')) {
+        const cmd = client.commands.get('antiraid');
+        if (cmd?.handleButton) await cmd.handleButton(interaction, client).catch(console.error);
+        return;
+      }
+
       // Rappel bump → message éphémère
       if (id === 'bump_reminder_click') {
         return interaction.reply({ content: '🚀 Utilisez `/bump` pour bumper votre serveur !', ephemeral: true });
@@ -670,14 +671,6 @@ module.exports = {
         return;
       }
 
-      // Suggestion votes
-      if (id.startsWith('sug_up_') || id.startsWith('sug_down_')) {
-        const type = id.startsWith('sug_up_') ? 'up' : 'down';
-        const suggestionId = id.replace(`sug_${type}_`, '');
-        const cmd = client.commands.get('suggestion');
-        if (cmd?.handleVote) await cmd.handleVote(interaction, suggestionId, type).catch(console.error);
-        return;
-      }
 
       // Confession modération
       if (id.startsWith('conf_approve_') || id.startsWith('conf_deny_')) {

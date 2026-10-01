@@ -199,6 +199,24 @@ module.exports = {
       console.error('inviteCache amorçage:', err.message);
     }
 
+    // ── Anti-raid — libération automatique des quarantaines échues (2 min) ──
+    setInterval(async () => {
+      try {
+        const { AntiRaid } = require('../../models/AntiRaid');
+        const { releaseQuarantine } = require('../../utils/antiraidActions');
+        const configs = await AntiRaid.find({ quarantineDurationMin: { $gt: 0 } });
+        for (const cfg of configs) {
+          const due = (cfg.quarantined || []).filter(q => Date.now() - new Date(q.at).getTime() >= cfg.quarantineDurationMin * 60_000);
+          if (!due.length) continue;
+          const guild = client.guilds.cache.get(cfg.guildId);
+          if (!guild) continue;
+          for (const q of due) {
+            await releaseQuarantine(client, guild, cfg, q.userId).catch(() => {});
+          }
+        }
+      } catch (err) { console.error('antiraid quarantine timer:', err.message); }
+    }, 120_000);
+
     console.log('✅ Tâches planifiées démarrées');
   },
 };

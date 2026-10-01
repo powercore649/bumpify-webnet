@@ -12,6 +12,23 @@ module.exports = {
   async execute(member, client) {
     const guild = member.guild;
 
+    // ── ANTI-RAID — si le membre vient d'être banni/kické par la protection, stop ici ──
+    try {
+      const AntiRaid = require('../../models/AntiRaid').AntiRaid;
+      const cfg = await AntiRaid.findOne({ guildId: guild.id, enabled: true }).lean();
+      if (cfg) {
+        if ((cfg.bannedUserIds || []).includes(member.id)) return; // déjà géré par l'event antiraid (kick/ban appliqué)
+        if (cfg.lockdownActive && cfg.response?.lockdown) {
+          // Serveur verrouillé : on refuse l'arrivée des comptes trop récents
+          const ageDays = (Date.now() - member.user.createdTimestamp) / 86_400_000;
+          if (ageDays < (cfg.minAccountAgeDays || 0)) {
+            await member.kick('Anti-raid : serveur verrouillé, compte trop récent').catch(() => {});
+            return;
+          }
+        }
+      }
+    } catch (_) {}
+
     // ── Onboarding / portail d'accès (priorité absolue si activé) ─────────
     let onboardingActive = false;
     try {
@@ -227,83 +244,8 @@ module.exports = {
         }
       }
     } catch (_) {}
-    // ── Raid mode automatique configurable (Feature C) ──────────────────────
-    try {
-      const AutoMod = require('../../models/AutoMod');
-      const { triggerRaidMode } = require('../../commands/moderation/raidmode');
-      const cfg = await AutoMod.findOne({ guildId: guild.id });
-
-      if (cfg?.raidAutoTrigger) {
-        const now = Date.now();
-        // Réutilise la même fenêtre/seuil que l'anti-raid classique (cfg.raidThreshold / cfg.raidWindow)
-        if (!global.__raidAutoCache) global.__raidAutoCache = new Map();
-        const cache = global.__raidAutoCache;
-        const data = cache.get(guild.id) || { count: 0, firstJoin: now };
-
-        if (now - data.firstJoin > cfg.raidWindow) {
-          data.count = 1; data.firstJoin = now;
-        } else {
-          data.count += 1;
-        }
-        cache.set(guild.id, data);
-
-        // Vérification d'âge de compte si configuré (action kick_new)
-        const accountAgeDays = (now - member.user.createdTimestamp) / 86_400_000;
-        const accountTooYoung = cfg.raidMinAccountAge > 0 && accountAgeDays < cfg.raidMinAccountAge;
-
-        if (data.count >= cfg.raidThreshold && !cfg.raidModeActive) {
-          data.count = 0;
-          cache.set(guild.id, data);
-
-          cfg.raidModeActive = true;
-          cfg.raidModeActivatedAt = new Date();
-          await cfg.save();
-
-          if (cfg.raidAutoAction === 'lock') {
-            await triggerRaidMode(guild, true);
-          } else if (cfg.raidAutoAction === 'kick_new') {
-            // Kick les comptes trop récents qui rejoignent pendant le raid
-            if (accountTooYoung) await member.kick('Anti-raid automatique : compte trop récent').catch(() => {});
-          } else if (cfg.raidAutoAction === 'verify') {
-            // Active le captcha existant si un salon est configuré
-            try {
-              const { CaptchaConfig } = require('../../models/Captcha');
-              await CaptchaConfig.findOneAndUpdate({ guildId: guild.id }, { enabled: true }, { upsert: true });
-            } catch (_) {}
-          }
-
-          // Log
-          try {
-            const { sendModLog, ModlogConfig } = require('../../commands/moderation/modlog');
-            const mlCfg = await ModlogConfig.findOne({ guildId: guild.id, enabled: true });
-            if (mlCfg) {
-              await sendModLog(client, guild.id, new EmbedBuilder()
-                .setColor(0xED4245)
-                .setTitle('🚨 Mode raid automatique déclenché')
-                .setDescription(`Seuil de **${cfg.raidThreshold} joins / ${cfg.raidWindow / 1000}s** atteint.\nAction appliquée : **${cfg.raidAutoAction}**`)
-                .setTimestamp());
-            }
-          } catch (_) {}
-
-          // Auto-désactivation après N minutes si configuré
-          if (cfg.raidAutoDisableMin > 0) {
-            setTimeout(async () => {
-              try {
-                const fresh = await AutoMod.findOne({ guildId: guild.id });
-                if (!fresh?.raidModeActive) return;
-                fresh.raidModeActive = false;
-                fresh.raidModeActivatedAt = null;
-                await fresh.save();
-                if (fresh.raidAutoAction === 'lock') await triggerRaidMode(guild, false);
-              } catch (_) {}
-            }, cfg.raidAutoDisableMin * 60 * 1000);
-          }
-        } else if (cfg.raidModeActive && cfg.raidAutoAction === 'kick_new' && accountTooYoung) {
-          // Pendant un raid actif déclenché en mode kick_new, continuer à kicker les nouveaux comptes récents
-          await member.kick('Anti-raid automatique : compte trop récent').catch(() => {});
-        }
-      }
-    } catch (err) { console.error('guildMemberAdd raid auto:', err); }
+    // ── (L'ancien « raid mode automatique » a été remplacé par le système
+    //    anti-raid complet : src/events/membres/antiraid.js + /antiraid) ──
 
     console.log(`✅ ${member.user.tag} a rejoint ${guild.name}`);
   },

@@ -1,9 +1,10 @@
 'use strict';
-// commands/captcha.js — Système de vérification CAPTCHA avancé, 100% fonctionnel
-// - Vraies images distordues (anti-OCR / anti-bot), générées à la volée, jamais de code en clair
-// - Régénération limitée, âge de compte minimum, rôle de bypass
-// - Logs configurables (relayés dans un salon si activé)
-// - Panel de configuration avancé multi-sections
+// commands/captcha.js — CAPTCHA refondu, 100% fonctionnel
+// - Panneau de configuration UNIQUE en un seul écran (5 rangées max, aucun sous-menu à retenir)
+// - Anti-OCR renforcé : 3 niveaux de brouillage d'image (normal / dur / extrême avec découpage)
+// - S'intègre à l'anti-raid : s'active automatiquement quand une attaque est détectée
+// - Image distordue jamais de code en clair (repli texte si canvas indisponible)
+// - Vraies tentatives, expiration, régénérations, âge de compte, rôles avant/après/bypass, logs
 
 const {
   SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, AttachmentBuilder,
@@ -13,7 +14,7 @@ const {
   PermissionFlagsBits, ChannelType,
 } = require('discord.js');
 const { CaptchaConfig, CaptchaPending } = require('../../models/Captcha');
-const { COLORS, successEmbed, errorEmbed } = require('../../utils/embeds');
+const { COLORS, successEmbed, errorEmbed, infoEmbed } = require('../../utils/embeds');
 const { renderCaptchaImage } = require('../../utils/captchaImage');
 const { checkAccountAge, checkBypass, compareAnswer, canRegenerate, attemptsExhausted } = require('../../utils/captchaEngine');
 const { logAction } = require('../../utils/captchaLogger');
@@ -37,7 +38,10 @@ function generateCode(type, length = 6) {
 }
 
 function securityLabel(t) {
-  return { letters: 'Lettres uniquement', numbers: 'Chiffres uniquement', mixed: 'Majuscules et chiffres', math: 'Calcul mathématique' }[t] || t;
+  return { letters: 'Lettres', numbers: 'Chiffres', mixed: 'Lettres+chiffres', math: 'Calcul math' }[t] || t;
+}
+function distortionLabel(l) {
+  return { normal: 'Normal', hard: 'Dur', extreme: 'Extrême' }[l] || l;
 }
 
 // ─── Construit l'image (ou le texte de repli) pour un code donné ────────────
@@ -46,12 +50,23 @@ function buildCaptchaVisual(cfg, code, question) {
     return { attachment: null, questionText: question ? `Calcule : **${question} ?**` : `Entrez exactement :\n# \`${code}\`` };
   }
   try {
-    const buf = renderCaptchaImage(question || code, { isMath: !!question });
+    const buf = renderCaptchaImage(question || code, { isMath: !!question, level: cfg.imageDistortionLevel || 'normal' });
     return { attachment: new AttachmentBuilder(buf, { name: 'captcha.png' }), questionText: null };
   } catch (err) {
     console.error('[Captcha] Échec génération image, repli en mode texte :', err.message);
     return { attachment: null, questionText: question ? `Calcule : **${question} ?**` : `Entrez exactement :\n# \`${code}\`` };
   }
+}
+
+function captchaButtons(cfg, pending, userId) {
+  const buttons = [
+    new ButtonBuilder().setCustomId(`captcha_answer_${userId}`).setLabel('✍️ Répondre').setStyle(ButtonStyle.Primary),
+  ];
+  const regensLeft = canRegenerate(pending?.regenerations || 0, cfg.maxRegenerations ?? 2);
+  if ((cfg.maxRegenerations ?? 2) > 0 && regensLeft) {
+    buttons.push(new ButtonBuilder().setCustomId(`captcha_regen_${userId}`).setLabel('🔄 Nouvelle image').setStyle(ButtonStyle.Secondary));
+  }
+  return new ActionRowBuilder().addComponents(...buttons);
 }
 
 // ─── Envoyer le captcha à un membre arrivant ──────────────────────────────────
@@ -84,7 +99,7 @@ async function sendCaptcha(member, cfg, client) {
 
     const botPerms = channel.permissionsFor(member.guild.members.me);
     if (!botPerms?.has(['ViewChannel', 'SendMessages', 'EmbedLinks', 'AttachFiles'])) {
-      console.error(`[Captcha] Permissions insuffisantes dans #${channel.name} (${member.guild.name}) : SendMessages/EmbedLinks/AttachFiles/ViewChannel requis. Le membre ${member.user.tag} n'a PAS pu être vérifié.`);
+      console.error(`[Captcha] Permissions insuffisantes dans #${channel.name} (${member.guild.name}). Le membre ${member.user.tag} n'a PAS pu être vérifié.`);
       return;
     }
 
@@ -119,20 +134,16 @@ async function sendCaptcha(member, cfg, client) {
         (cfg.maxRegenerations > 0 ? ` ・ 🔄 Régénérations : **${cfg.maxRegenerations}**` : '')
       )
       .setThumbnail(member.user.displayAvatarURL())
-      .setFooter({ text: `Sécurité : ${securityLabel(cfg.security)}${cfg.caseSensitive ? ' · Casse exacte requise' : ''}` })
+      .setFooter({ text: `Sécurité : ${securityLabel(cfg.security)} · Image : ${distortionLabel(cfg.imageDistortionLevel)}${cfg.caseSensitive ? ' · Casse exacte' : ''}` })
       .setTimestamp();
 
     if (attachment) embed.setImage('attachment://captcha.png');
 
-    const buttons = [
-      new ButtonBuilder().setCustomId(`captcha_answer_${member.id}`).setLabel('✍️ Répondre').setStyle(ButtonStyle.Primary),
-    ];
-    if (cfg.maxRegenerations > 0) {
-      buttons.push(new ButtonBuilder().setCustomId(`captcha_regen_${member.id}`).setLabel('🔄 Nouvelle image').setStyle(ButtonStyle.Secondary));
-    }
-    const row = new ActionRowBuilder().addComponents(...buttons);
-
-    const sendPayload = { content: `<@${member.id}>`, embeds: [embed], components: [row] };
+    const sendPayload = {
+      content: `<@${member.id}>`,
+      embeds: [embed],
+      components: [captchaButtons(cfg, null, member.id)],
+    };
     if (attachment) sendPayload.files = [attachment];
 
     const msg = await channel.send(sendPayload);
@@ -259,16 +270,11 @@ async function handleRegenerate(interaction) {
       `⏱️ Temps restant jusqu'à <t:${Math.floor(pending.expiresAt.getTime() / 1000)}:R> ・ ❌ Tentatives restantes : **${Math.max(0, cfg.attempts - pending.attempts)}**`
     )
     .setThumbnail(interaction.user.displayAvatarURL())
-    .setFooter({ text: `Sécurité : ${securityLabel(cfg.security)} ・ Régénérations restantes : ${Math.max(0, cfg.maxRegenerations - pending.regenerations)}` })
+    .setFooter({ text: `Sécurité : ${securityLabel(cfg.security)} · Image : ${distortionLabel(cfg.imageDistortionLevel)} · Régénérations restantes : ${Math.max(0, cfg.maxRegenerations - pending.regenerations)}` })
     .setTimestamp();
   if (attachment) embed.setImage('attachment://captcha.png');
 
-  const buttons = [new ButtonBuilder().setCustomId(`captcha_answer_${interaction.user.id}`).setLabel('✍️ Répondre').setStyle(ButtonStyle.Primary)];
-  if (canRegenerate(pending.regenerations, cfg.maxRegenerations)) {
-    buttons.push(new ButtonBuilder().setCustomId(`captcha_regen_${interaction.user.id}`).setLabel('🔄 Nouvelle image').setStyle(ButtonStyle.Secondary));
-  }
-
-  const updatePayload = { embeds: [embed], components: [new ActionRowBuilder().addComponents(...buttons)] };
+  const updatePayload = { embeds: [embed], components: [captchaButtons(cfg, pending, interaction.user.id)] };
   if (attachment) updatePayload.files = [attachment];
 
   await interaction.update(updatePayload);
@@ -352,30 +358,33 @@ async function handleCaptchaSubmit(interaction) {
   }
 }
 
-// ─── Build embeds/components du panel /captcha ────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+//  PANNEAU DE CONFIGURATION UNIQUE
+// ═════════════════════════════════════════════════════════════════════════════
 function buildCaptchaEmbed(cfg) {
   return new EmbedBuilder()
     .setColor(COLORS.primary)
     .setTitle('🔒 Configuration — Captcha')
-    .setDescription('Panel de configuration avancé. Choisissez une section à modifier.')
+    .setDescription('Panneau unique : tout se règle ici en un seul écran. Le captcha s\'affiche à l\'arrivée de chaque membre et bloque les bots.')
     .addFields(
-      { name: '**Statut**',                value: cfg?.enabled    ? '🟢 Activé'           : '🔴 Désactivé',                  inline: true },
-      { name: '**Mode image**',            value: cfg?.imageMode  ? '🖼️ Image distordue'  : '📝 Texte brut',                 inline: true },
-      { name: '**Salon**',                 value: cfg?.channelId  ? `<#${cfg.channelId}>` : 'Aucun',                        inline: true },
-      { name: '**Salon de logs**',         value: cfg?.logChannelId ? `<#${cfg.logChannelId}>` : 'Aucun',                   inline: true },
-      { name: '**Rôle avant**',            value: cfg?.roleBefore ? `<@&${cfg.roleBefore}>` : 'Aucun',                      inline: true },
-      { name: '**Rôle après**',            value: cfg?.roleAfter  ? `<@&${cfg.roleAfter}>`  : 'Aucun',                      inline: true },
-      { name: '**Rôle bypass**',           value: cfg?.bypassRoleId ? `<@&${cfg.bypassRoleId}>` : 'Aucun',                  inline: true },
-      { name: '**Sécurité**',              value: securityLabel(cfg?.security || 'mixed'),                                 inline: true },
-      { name: '**Tentatives max**',        value: String(cfg?.attempts  ?? 3),                                             inline: true },
-      { name: '**Expiration**',            value: `${cfg?.timeout ?? 10} min`,                                             inline: true },
-      { name: '**Régénérations max**',     value: String(cfg?.maxRegenerations ?? 2),                                      inline: true },
-      { name: '**Âge de compte min.**',    value: cfg?.minAccountAgeDays > 0 ? `${cfg.minAccountAgeDays} jour(s)` : 'Désactivé', inline: true },
-      { name: '**Casse exacte**',          value: cfg?.caseSensitive ? '✅ Requise' : '❌ Non', inline: true },
-      { name: '**Kick si échec/timeout**', value: cfg?.kickOnFail ? '✅ Oui' : '❌ Non',        inline: true },
-      { name: '**Prévenir en DM**',        value: cfg?.dmOnKick ? '✅ Oui' : '❌ Non',          inline: true },
+      { name: '📢 Statut',            value: cfg?.enabled    ? '🟢 Activé'           : '🔴 Désactivé',                  inline: true },
+      { name: '📝 Salon',             value: cfg?.channelId  ? `<#${cfg.channelId}>` : '*Non défini*',                  inline: true },
+      { name: '📋 Salon de logs',     value: cfg?.logChannelId ? `<#${cfg.logChannelId}>` : '*Aucun*',                   inline: true },
+      { name: '🛡️ Anti-OCR (image)',  value: cfg?.imageMode ? `🖼️ ${distortionLabel(cfg?.imageDistortionLevel)}` : '📝 Texte brut', inline: true },
+      { name: '🚨 Auto sur raid',     value: cfg?.activeOnRaid ? '🟢 Activé' : '🔴 Désactivé',                          inline: true },
+      { name: '⏳ Rôle avant',        value: cfg?.roleBefore ? `<@&${cfg.roleBefore}>` : '*Aucun*',                      inline: true },
+      { name: '✅ Rôle après',        value: cfg?.roleAfter  ? `<@&${cfg.roleAfter}>`  : '*Aucun*',                      inline: true },
+      { name: '🟢 Rôle bypass',       value: cfg?.bypassRoleId ? `<@&${cfg.bypassRoleId}>` : '*Aucun*',                  inline: true },
+      { name: '🔒 Type de code',      value: securityLabel(cfg?.security || 'mixed'),                                    inline: true },
+      { name: '❌ Tentatives max',    value: String(cfg?.attempts  ?? 3),                                                inline: true },
+      { name: '⏱️ Expiration',        value: `${cfg?.timeout ?? 10} min`,                                                inline: true },
+      { name: '🔄 Régénérations max', value: String(cfg?.maxRegenerations ?? 2),                                         inline: true },
+      { name: '🎂 Âge de compte min.',value: cfg?.minAccountAgeDays > 0 ? `${cfg.minAccountAgeDays} jour(s)` : '*Désactivé*', inline: true },
+      { name: '🔤 Casse exacte',      value: cfg?.caseSensitive ? '✅ Requise' : '❌ Non',        inline: true },
+      { name: '👢 Kick si échec',     value: cfg?.kickOnFail ? '✅ Oui' : '❌ Non',               inline: true },
+      { name: '📩 DM avant kick',     value: cfg?.dmOnKick ? '✅ Oui' : '❌ Non',                 inline: true },
     )
-    .setFooter({ text: 'Bumpify • Captcha avancé' })
+    .setFooter({ text: 'Bumpify • Captcha v2 — panneau unique' })
     .setTimestamp();
 }
 
@@ -383,18 +392,42 @@ function buildCaptchaComponents(cfg) {
   const r1 = new ActionRowBuilder().addComponents(
     new ButtonBuilder().setCustomId('captcha_toggle').setLabel(cfg?.enabled ? '🔴 Désactiver' : '🟢 Activer').setStyle(cfg?.enabled ? ButtonStyle.Danger : ButtonStyle.Success),
     new ButtonBuilder().setCustomId('captcha_set_channel').setLabel('# Salon').setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId('captcha_set_role_before').setLabel('@ Rôle avant').setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId('captcha_set_role_after').setLabel('@ Rôle après').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId('captcha_set_security').setLabel('🔒 Sécurité').setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId('captcha_set_logs').setLabel('📋 Logs').setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId('captcha_toggle_image').setLabel(cfg?.imageMode ? '🖼️ Image : ON' : '📝 Image : OFF').setStyle(cfg?.imageMode ? ButtonStyle.Success : ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId('captcha_toggle_raid').setLabel(cfg?.activeOnRaid ? '🚨 Auto raid : ON' : '🚨 Auto raid : OFF').setStyle(cfg?.activeOnRaid ? ButtonStyle.Success : ButtonStyle.Secondary),
   );
   const r2 = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('captcha_set_logs').setLabel('📋 Logs').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId('captcha_set_bypass').setLabel('🟢 Rôle bypass').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId('captcha_advanced').setLabel('⚙️ Paramètres').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId('captcha_antibot').setLabel('🛡️ Anti-bot avancé').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId('captcha_toggle_image').setLabel(cfg?.imageMode ? '🖼️ Image: ON' : '📝 Image: OFF').setStyle(cfg?.imageMode ? ButtonStyle.Success : ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId('captcha_set_role_before').setLabel('⏳ Rôle avant').setStyle(ButtonStyle.Primary),
+    new ButtonBuilder().setCustomId('captcha_set_role_after').setLabel('✅ Rôle après').setStyle(ButtonStyle.Primary),
+    new ButtonBuilder().setCustomId('captcha_set_bypass').setLabel('🟢 Bypass').setStyle(ButtonStyle.Secondary),
   );
-  return [r1, r2];
+  const r3 = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId('captcha_set_security').setLabel('🔒 Type de code').setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId('captcha_set_distortion').setLabel('🛡️ Anti-OCR').setStyle(ButtonStyle.Secondary),
+  );
+  const r4 = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId('captcha_advanced').setLabel('⚙️ Paramètres').setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId('captcha_antibot').setLabel('🤖 Anti-bot avancé').setStyle(ButtonStyle.Secondary),
+  );
+  return [r1, r2, r3, r4];
+}
+
+// ─── Vues de sélection (remplacent le panneau le temps du choix) ─────────────
+function selectView({ title, description, row, clearId = null }) {
+  const components = [row];
+  const back = new ButtonBuilder().setCustomId('captcha_back').setLabel('← Retour').setStyle(ButtonStyle.Secondary);
+  if (clearId) {
+    components.push(new ActionRowBuilder().addComponents(
+      back,
+      new ButtonBuilder().setCustomId(clearId).setLabel('🗑️ Retirer').setStyle(ButtonStyle.Danger),
+    ));
+  } else {
+    components.push(new ActionRowBuilder().addComponents(back));
+  }
+  return {
+    embeds: [new EmbedBuilder().setColor(COLORS.info).setTitle(title).setDescription(description)],
+    components,
+  };
 }
 
 // ─── Commande slash ───────────────────────────────────────────────────────────
@@ -432,93 +465,99 @@ module.exports = {
 
     col.on('collect', async i => {
       cfg = await CaptchaConfig.findOne({ guildId: interaction.guildId });
-      const back = new ButtonBuilder().setCustomId('captcha_back').setLabel('← Retour').setStyle(ButtonStyle.Secondary);
 
-      if (i.customId === 'captcha_toggle') {
-        cfg.enabled = !cfg.enabled;
-        await cfg.save();
-        return refresh(i);
-      }
+      // ── Toggles directs ──
+      if (i.customId === 'captcha_toggle')        { cfg.enabled    = !cfg.enabled;    await cfg.save(); return refresh(i); }
+      if (i.customId === 'captcha_toggle_image')  { cfg.imageMode  = !cfg.imageMode;  await cfg.save(); return refresh(i); }
+      if (i.customId === 'captcha_toggle_raid')   { cfg.activeOnRaid = !cfg.activeOnRaid; await cfg.save(); return refresh(i); }
+      if (i.customId === 'captcha_back')          return refresh(i);
 
-      if (i.customId === 'captcha_toggle_image') {
-        cfg.imageMode = !cfg.imageMode;
-        await cfg.save();
-        return refresh(i);
-      }
-
+      // ── Vues de sélection ──
       if (i.customId === 'captcha_set_channel') {
-        return i.update({
-          embeds: [new EmbedBuilder().setColor(COLORS.info).setTitle('# Salon Captcha').setDescription(`Actuel : ${cfg.channelId ? `<#${cfg.channelId}>` : '*Aucun*'}\n\nSélectionnez le salon où le captcha sera envoyé à l'arrivée.`)],
-          components: [
-            new ActionRowBuilder().addComponents(
-              new ChannelSelectMenuBuilder().setCustomId('captcha_channel_select').setPlaceholder('Choisir un salon…').addChannelTypes(ChannelType.GuildText),
-            ),
-            new ActionRowBuilder().addComponents(back),
-          ],
-        });
+        return i.update(selectView({
+          title: '# Salon du captcha',
+          description: `Le captcha sera envoyé ici à chaque arrivée.\nActuel : ${cfg.channelId ? `<#${cfg.channelId}>` : '*Aucun*'}`,
+          row: new ActionRowBuilder().addComponents(
+            new ChannelSelectMenuBuilder().setCustomId('captcha_channel_select').setPlaceholder('Choisir un salon…').addChannelTypes(ChannelType.GuildText),
+          ),
+        }));
       }
-
       if (i.customId === 'captcha_set_logs') {
-        const clear = new ButtonBuilder().setCustomId('captcha_clear_logs').setLabel('🗑️ Retirer').setStyle(ButtonStyle.Danger);
-        return i.update({
-          embeds: [new EmbedBuilder().setColor(COLORS.info).setTitle('📋 Salon de logs').setDescription(`Chaque évènement (envoi, réussite, échec, régénération, expulsion…) y sera relayé en direct.\nActuel : ${cfg.logChannelId ? `<#${cfg.logChannelId}>` : '*Aucun*'}`)],
-          components: [
-            new ActionRowBuilder().addComponents(new ChannelSelectMenuBuilder().setCustomId('captcha_log_channel_select').setPlaceholder('Choisir un salon de logs…').addChannelTypes(ChannelType.GuildText)),
-            new ActionRowBuilder().addComponents(back, clear),
-          ],
-        });
+        return i.update(selectView({
+          title: '📋 Salon de logs',
+          description: `Chaque évènement (envoi, réussite, échec, régénération, expulsion…) y sera relayé en direct.\nActuel : ${cfg.logChannelId ? `<#${cfg.logChannelId}>` : '*Aucun*'}`,
+          row: new ActionRowBuilder().addComponents(
+            new ChannelSelectMenuBuilder().setCustomId('captcha_log_channel_select').setPlaceholder('Choisir un salon de logs…').addChannelTypes(ChannelType.GuildText),
+          ),
+          clearId: 'captcha_clear_logs',
+        }));
       }
-
       if (i.customId === 'captcha_set_bypass') {
-        const clear = new ButtonBuilder().setCustomId('captcha_clear_bypass').setLabel('🗑️ Retirer').setStyle(ButtonStyle.Danger);
-        return i.update({
-          embeds: [new EmbedBuilder().setColor(COLORS.info).setTitle('🟢 Rôle de bypass').setDescription(`Les membres possédant ce rôle sautent le captcha entièrement (utile pour les bots vérifiés ou membres de confiance ajoutés manuellement).\nActuel : ${cfg.bypassRoleId ? `<@&${cfg.bypassRoleId}>` : '*Aucun*'}`)],
-          components: [
-            new ActionRowBuilder().addComponents(new RoleSelectMenuBuilder().setCustomId('captcha_bypass_role_select').setPlaceholder('Rôle de bypass…')),
-            new ActionRowBuilder().addComponents(back, clear),
-          ],
-        });
+        return i.update(selectView({
+          title: '🟢 Rôle de bypass',
+          description: `Les membres possédant ce rôle sautent le captcha entièrement.\nActuel : ${cfg.bypassRoleId ? `<@&${cfg.bypassRoleId}>` : '*Aucun*'}`,
+          row: new ActionRowBuilder().addComponents(new RoleSelectMenuBuilder().setCustomId('captcha_bypass_role_select').setPlaceholder('Rôle de bypass…')),
+          clearId: 'captcha_clear_bypass',
+        }));
       }
-
       if (i.customId === 'captcha_set_role_before') {
-        const clear = new ButtonBuilder().setCustomId('captcha_clear_role_before').setLabel('🗑️ Retirer').setStyle(ButtonStyle.Danger);
-        return i.update({
-          embeds: [new EmbedBuilder().setColor(COLORS.info).setTitle('@ Rôle avant le captcha').setDescription(`Attribué dès l'arrivée, **avant** la vérification.\nActuel : ${cfg.roleBefore ? `<@&${cfg.roleBefore}>` : '*Aucun*'}`)],
-          components: [
-            new ActionRowBuilder().addComponents(new RoleSelectMenuBuilder().setCustomId('captcha_role_before_select').setPlaceholder('Rôle non-vérifié…')),
-            new ActionRowBuilder().addComponents(back, clear),
-          ],
-        });
+        return i.update(selectView({
+          title: '⏳ Rôle avant le captcha',
+          description: `Attribué dès l'arrivée, **avant** la vérification.\nActuel : ${cfg.roleBefore ? `<@&${cfg.roleBefore}>` : '*Aucun*'}`,
+          row: new ActionRowBuilder().addComponents(new RoleSelectMenuBuilder().setCustomId('captcha_role_before_select').setPlaceholder('Rôle non-vérifié…')),
+          clearId: 'captcha_clear_role_before',
+        }));
       }
-
       if (i.customId === 'captcha_set_role_after') {
-        const clear = new ButtonBuilder().setCustomId('captcha_clear_role_after').setLabel('🗑️ Retirer').setStyle(ButtonStyle.Danger);
-        return i.update({
-          embeds: [new EmbedBuilder().setColor(COLORS.info).setTitle('@ Rôle après le captcha').setDescription(`Attribué **après** la vérification réussie.\nActuel : ${cfg.roleAfter ? `<@&${cfg.roleAfter}>` : '*Aucun*'}`)],
-          components: [
-            new ActionRowBuilder().addComponents(new RoleSelectMenuBuilder().setCustomId('captcha_role_after_select').setPlaceholder('Rôle vérifié…')),
-            new ActionRowBuilder().addComponents(back, clear),
-          ],
-        });
+        return i.update(selectView({
+          title: '✅ Rôle après le captcha',
+          description: `Attribué **après** la vérification réussie.\nActuel : ${cfg.roleAfter ? `<@&${cfg.roleAfter}>` : '*Aucun*'}`,
+          row: new ActionRowBuilder().addComponents(new RoleSelectMenuBuilder().setCustomId('captcha_role_after_select').setPlaceholder('Rôle vérifié…')),
+          clearId: 'captcha_clear_role_after',
+        }));
       }
-
       if (i.customId === 'captcha_set_security') {
-        return i.update({
-          embeds: [new EmbedBuilder().setColor(COLORS.info).setTitle('🔒 Type de captcha').setDescription(`Actuel : **${securityLabel(cfg.security)}**\n\nTous les types sont désormais rendus comme **image distordue** (si le mode image est activé) — aucun code n'est jamais exposé en texte brut lisible par un bot.`)],
-          components: [
-            new ActionRowBuilder().addComponents(
-              new StringSelectMenuBuilder().setCustomId('captcha_security_select').setPlaceholder('Type de captcha…').addOptions([
-                { label: 'Lettres uniquement',     value: 'letters', emoji: '🔤', description: 'Code en majuscules seulement' },
-                { label: 'Chiffres uniquement',    value: 'numbers', emoji: '🔢', description: 'Code numérique' },
-                { label: 'Majuscules et chiffres', value: 'mixed',   emoji: '🔣', description: 'Mélange (recommandé)' },
-                { label: 'Calcul mathématique',    value: 'math',    emoji: '➕', description: 'Opération simple à calculer' },
-              ]),
-            ),
-            new ActionRowBuilder().addComponents(back),
-          ],
-        });
+        return i.update(selectView({
+          title: '🔒 Type de code',
+          description: `Actuel : **${securityLabel(cfg.security)}**\n\nTous les types sont rendus en **image distordue** (si le mode image est activé) — aucun code n'est jamais exposé en texte lisible par un bot.`,
+          row: new ActionRowBuilder().addComponents(
+            new StringSelectMenuBuilder().setCustomId('captcha_security_select').setPlaceholder('Type de captcha…').addOptions([
+              { label: 'Lettres uniquement',     value: 'letters', emoji: '🔤', description: 'Code en majuscules seulement' },
+              { label: 'Chiffres uniquement',    value: 'numbers', emoji: '🔢', description: 'Code numérique' },
+              { label: 'Lettres et chiffres',    value: 'mixed',   emoji: '🔣', description: 'Mélange (recommandé)' },
+              { label: 'Calcul mathématique',    value: 'math',    emoji: '➕', description: 'Opération simple à calculer' },
+            ]),
+          ),
+        }));
+      }
+      if (i.customId === 'captcha_set_distortion') {
+        return i.update(selectView({
+          title: '🛡️ Niveau anti-OCR',
+          description: `Actuel : **${distortionLabel(cfg.imageDistortionLevel)}**\n\n**Normal** — distorsion standard.\n**Dur** — brouillage doublé + découpage horizontal.\n**Extrême** — découpage fort + triple bruit (illisible pour les bots, reste humain).`,
+          row: new ActionRowBuilder().addComponents(
+            new StringSelectMenuBuilder().setCustomId('captcha_distortion_select').setPlaceholder('Niveau anti-OCR…').addOptions([
+              { label: 'Normal',  value: 'normal',  emoji: '🟢', description: 'Distorsion standard' },
+              { label: 'Dur',     value: 'hard',    emoji: '🟠', description: 'Brouillage doublé + découpage' },
+              { label: 'Extrême', value: 'extreme', emoji: '🔴', description: 'Résistance maximale aux bots' },
+            ]),
+          ),
+        }));
       }
 
+      // ── Sélections ──
+      if (i.customId === 'captcha_channel_select')      { cfg.channelId    = i.values[0]; await cfg.save(); return refresh(i); }
+      if (i.customId === 'captcha_log_channel_select')  { cfg.logChannelId = i.values[0]; await cfg.save(); return refresh(i); }
+      if (i.customId === 'captcha_bypass_role_select')  { cfg.bypassRoleId = i.values[0]; await cfg.save(); return refresh(i); }
+      if (i.customId === 'captcha_role_before_select')  { cfg.roleBefore   = i.values[0]; await cfg.save(); return refresh(i); }
+      if (i.customId === 'captcha_role_after_select')   { cfg.roleAfter    = i.values[0]; await cfg.save(); return refresh(i); }
+      if (i.customId === 'captcha_security_select')     { cfg.security     = i.values[0]; await cfg.save(); return refresh(i); }
+      if (i.customId === 'captcha_distortion_select')   { cfg.imageDistortionLevel = i.values[0]; await cfg.save(); return refresh(i); }
+      if (i.customId === 'captcha_clear_logs')          { cfg.logChannelId = null; await cfg.save(); return refresh(i); }
+      if (i.customId === 'captcha_clear_bypass')        { cfg.bypassRoleId = null; await cfg.save(); return refresh(i); }
+      if (i.customId === 'captcha_clear_role_before')   { cfg.roleBefore   = null; await cfg.save(); return refresh(i); }
+      if (i.customId === 'captcha_clear_role_after')    { cfg.roleAfter    = null; await cfg.save(); return refresh(i); }
+
+      // ── Modaux ──
       if (i.customId === 'captcha_advanced') {
         const modal = new ModalBuilder().setCustomId('captcha_advanced_modal').setTitle('⚙️ Paramètres');
         modal.addComponents(
@@ -531,7 +570,7 @@ module.exports = {
       }
 
       if (i.customId === 'captcha_antibot') {
-        const modal = new ModalBuilder().setCustomId('captcha_antibot_modal').setTitle('🛡️ Anti-bot avancé');
+        const modal = new ModalBuilder().setCustomId('captcha_antibot_modal').setTitle('🤖 Anti-bot avancé');
         modal.addComponents(
           new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('captcha_regens').setLabel('Régénérations max (0–5)').setStyle(TextInputStyle.Short).setValue(String(cfg.maxRegenerations)).setRequired(true)),
           new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('captcha_min_age').setLabel('Âge min. du compte en jours (0=off)').setStyle(TextInputStyle.Short).setValue(String(cfg.minAccountAgeDays)).setRequired(true)),
@@ -540,18 +579,6 @@ module.exports = {
         );
         return i.showModal(modal);
       }
-
-      if (i.customId === 'captcha_back') return refresh(i);
-      if (i.customId === 'captcha_channel_select')      { cfg.channelId    = i.values[0]; await cfg.save(); return refresh(i); }
-      if (i.customId === 'captcha_log_channel_select')  { cfg.logChannelId = i.values[0]; await cfg.save(); return refresh(i); }
-      if (i.customId === 'captcha_bypass_role_select')  { cfg.bypassRoleId = i.values[0]; await cfg.save(); return refresh(i); }
-      if (i.customId === 'captcha_role_before_select')  { cfg.roleBefore   = i.values[0]; await cfg.save(); return refresh(i); }
-      if (i.customId === 'captcha_role_after_select')   { cfg.roleAfter    = i.values[0]; await cfg.save(); return refresh(i); }
-      if (i.customId === 'captcha_clear_logs')          { cfg.logChannelId = null;         await cfg.save(); return refresh(i); }
-      if (i.customId === 'captcha_clear_bypass')        { cfg.bypassRoleId = null;         await cfg.save(); return refresh(i); }
-      if (i.customId === 'captcha_clear_role_before')   { cfg.roleBefore   = null;         await cfg.save(); return refresh(i); }
-      if (i.customId === 'captcha_clear_role_after')    { cfg.roleAfter    = null;         await cfg.save(); return refresh(i); }
-      if (i.customId === 'captcha_security_select')     { cfg.security     = i.values[0]; await cfg.save(); return refresh(i); }
     });
 
     col.on('end', () => interaction.editReply({ components: [] }).catch(() => {}));
@@ -586,9 +613,9 @@ module.exports = {
     cfg.maxRegenerations = regens;
     cfg.minAccountAgeDays = minAge;
     const caseRaw = interaction.fields.getTextInputValue('captcha_case').toLowerCase().trim();
-    cfg.caseSensitive = caseRaw === 'oui' || caseRaw === 'yes' || caseRaw === '1' || caseRaw === 'true';
+    cfg.caseSensitive = rawTrue(caseRaw);
     const dmRaw = interaction.fields.getTextInputValue('captcha_dm').toLowerCase().trim();
-    cfg.dmOnKick = dmRaw === 'oui' || dmRaw === 'yes' || dmRaw === '1' || dmRaw === 'true';
+    cfg.dmOnKick = rawTrue(dmRaw);
     await cfg.save();
 
     return interaction.reply({
@@ -598,3 +625,7 @@ module.exports = {
     });
   },
 };
+
+function rawTrue(v) {
+  return v === 'oui' || v === 'yes' || v === '1' || v === 'true';
+}

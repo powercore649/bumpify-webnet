@@ -34,7 +34,7 @@ const CATEGORIES = {
       { value: 'honeypot',       label: '🍯 Honeypot',          description: 'Salon + bouton piège anti-bot',             direct: 'honeypot' },
       { value: 'antiscam',       label: '🚨 Anti-Scam',         description: 'Détection de liens/arnaques',               guide: '`/antiscam activer` — Activer/désactiver l\'anti-scam' },
       { value: 'warnconfig',     label: '⚠️ Avertissements',    description: 'Paliers de sanctions automatiques',         guide: '`/warnconfig` — Configurer les paliers d\'avertissements' },
-      { value: 'raidautoconfig', label: '🚔 Mode raid auto',    description: 'Déclenchement automatique du mode raid',    guide: '`/raidautoconfig config` — Déclenchement automatique du mode raid' },
+      { value: 'antiraid', label: '🛡️ Anti-raid',    description: 'Protection complète : raids, quarantaine, honeypots',    guide: '`/antiraid` — Panneau de protection anti-raid complet' },
     ],
   },
   communaute: {

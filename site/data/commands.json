@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-01T15:50:41.015Z",
-  "total": 108,
+  "generatedAt": "2026-10-01T17:41:40.847Z",
+  "total": 107,
   "categories": [
     {
       "label": "Bump & Réseau",
@@ -291,6 +291,15 @@
       "count": 15,
       "commands": [
         {
+          "name": "antiraid",
+          "description": "🛡️ Protection anti-raid complète — panneau de configuration",
+          "category": "moderation",
+          "file": "src/commands/moderation/antiraid.js",
+          "defaultMemberPermissions": "8",
+          "subcommands": [],
+          "options": []
+        },
+        {
           "name": "antiscam",
           "description": "🛡️ Configurer le système anti-arnaque par image",
           "category": "moderation",
@@ -534,36 +543,6 @@
             {
               "name": "supprimer index",
               "description": "Numéro de la note (voir /note voir)",
-              "options": []
-            }
-          ],
-          "options": []
-        },
-        {
-          "name": "raidautoconfig",
-          "description": "🚨 Configurer le déclenchement automatique du mode raid",
-          "category": "moderation",
-          "file": "src/commands/moderation/raidautoconfig.js",
-          "defaultMemberPermissions": "8",
-          "subcommands": [
-            {
-              "name": "config auto_declencheur",
-              "description": "Activer le déclenchement automatique (utilise le seuil de /automod raid)",
-              "options": []
-            },
-            {
-              "name": "config age_min_compte",
-              "description": "Âge minimum du compte en jours (0 = désactivé)",
-              "options": []
-            },
-            {
-              "name": "config action",
-              "description": "Action appliquée lors du déclenchement automatique",
-              "options": []
-            },
-            {
-              "name": "config auto_desactivation_min",
-              "description": "Désactivation automatique après N minutes (0 = désactivé)",
               "options": []
             }
           ],
@@ -1394,7 +1373,7 @@
       "color": "#57F287",
       "desc": "Giveaways, sondages, suggestions, anniversaires…",
       "key": "communaute",
-      "count": 17,
+      "count": 16,
       "commands": [
         {
           "name": "anniversaire",
@@ -1801,66 +1780,6 @@
               "required": false
             }
           ]
-        },
-        {
-          "name": "suggestion",
-          "description": "💡 Système de suggestions (v2)",
-          "category": "communaute",
-          "file": "src/commands/communaute/suggestion.js",
-          "defaultMemberPermissions": null,
-          "subcommands": [
-            {
-              "name": "proposer texte",
-              "description": "Votre suggestion",
-              "options": []
-            },
-            {
-              "name": "proposer categorie",
-              "description": "Catégorie",
-              "options": []
-            },
-            {
-              "name": "proposer anonyme",
-              "description": "Proposer anonymement (si autorisé)",
-              "options": []
-            },
-            {
-              "name": "approuver numero",
-              "description": "Numéro de la suggestion",
-              "options": []
-            },
-            {
-              "name": "approuver raison",
-              "description": "Raison (optionnel)",
-              "options": []
-            },
-            {
-              "name": "refuser numero",
-              "description": "Numéro de la suggestion",
-              "options": []
-            },
-            {
-              "name": "refuser raison",
-              "description": "Raison (optionnel)",
-              "options": []
-            },
-            {
-              "name": "modifier numero",
-              "description": "Numéro de la suggestion",
-              "options": []
-            },
-            {
-              "name": "modifier texte",
-              "description": "Nouveau texte",
-              "options": []
-            },
-            {
-              "name": "supprimer numero",
-              "description": "Numéro de la suggestion",
-              "options": []
-            }
-          ],
-          "options": []
         },
         {
           "name": "todo",

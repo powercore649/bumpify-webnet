@@ -141,12 +141,6 @@ process.on('unhandledRejection', err => {
 
 process.on('uncaughtException', err => console.error('❌ UncaughtException:', err));
 
-// ── Serveur web (transcripts publics des suggestions) ────────────────────────
-client.once('ready', () => {
-  const { startWebServer } = require('./web/server');
-  startWebServer(client);
-});
-
 // ── Connexion sécurisée avec retry auto ──────────────────────────────────────
 async function loginWithRetry() {
   try {

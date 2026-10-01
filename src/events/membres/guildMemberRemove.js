@@ -9,6 +9,12 @@ module.exports = {
   async execute(member, client) {
     const guild = member.guild;
 
+    // ── Anti-raid : nettoyage quarantaine/buffer si le membre part ────────
+    try {
+      const { memberLeftAction } = require('../../utils/antiraidActions');
+      await memberLeftAction(guild.id, member.id);
+    } catch (_) {}
+
     // ── Onboarding : nettoyer le salon/session si le membre part en cours ──
     try {
       const { cancelOnboarding } = require('../../utils/onboardingManager');

@@ -18,6 +18,11 @@ const captchaConfigSchema = new mongoose.Schema({
   maxRegenerations:{ type: Number, default: 2 },       // nombre de fois où un membre peut demander une nouvelle image
   minAccountAgeDays:{ type: Number, default: 0 },      // 0 = désactivé — âge minimum du compte Discord pour accéder au captcha
   dmOnKick:        { type: Boolean, default: false },  // notifier le membre en DM avant expulsion (best-effort)
+
+  // ── Anti-OCR & intégration anti-raid (v2) ──
+  imageDistortionLevel: { type: String, enum: ['normal', 'hard', 'extreme'], default: 'normal' }, // force du brouillage de l'image
+  activeOnRaid:    { type: Boolean, default: true },   // s'active automatiquement quand l'anti-raid détecte une attaque
+  raidAutoActive:  { type: Boolean, default: false },  // marqué quand le captcha a été activé automatiquement par l'anti-raid
 });
 
 const captchaPendingSchema = new mongoose.Schema({

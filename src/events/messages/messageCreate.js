@@ -12,6 +12,20 @@ module.exports = {
     // ── Blacklist globale — ignore tout message de serveur blacklisté ─────
     if (message.guild && blacklist.isBlacklisted(message.guildId)) return;
 
+    // ── Anti-raid : honeypots — écrire dans un salon-piège = bot confirmé ──
+    if (message.guild && !message.author.bot) {
+      try {
+        const Honeypot = require('../../models/AntiRaid').Honeypot;
+        const hp = await Honeypot.findOne({ guildId: message.guild.id, channelId: message.channel.id });
+        if (hp) {
+          const { triggerHoneypot } = require('../../utils/antiraidActions');
+          await triggerHoneypot(client, message.guild, hp, message.author.id);
+          await message.delete().catch(() => {});
+          return;
+        }
+      } catch (err) { console.error('[anti-raid] honeypot:', err.message); }
+    }
+
 
     // ── ModMail — Messages privés (DM) ────────────────────────────────────
     if (!message.guild && !message.author.bot) {

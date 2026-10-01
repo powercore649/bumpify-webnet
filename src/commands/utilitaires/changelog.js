@@ -18,6 +18,15 @@ const { COLORS } = require('../../utils/embeds');
 
 const CHANGELOG = [
   {
+    version: '🛡️ Protection anti-raid complète & Captcha refondu',
+    date: 'octobre 2026',
+    changes: [
+      '**Système de suggestions retiré** — remplacé par une protection anti-raid complète : détection en temps réel (fenêtre glissante), quarantaine automatique, verrouillage d\'urgence, réponse aux vagues de raids, honeypots multiples',
+      'Nouveau `/antiraid` — panneau unique de configuration de tous les systèmes anti-raid du bot : détection, quarantaine, wave raids, verrouillage, honeypot, white/anti-listes, statut en direct',
+      '**Captcha refondu à 100 %** — config en un seul écran, checkbox anti-OCR (brouillage image ×2/×3, activation par raid, âge selon niveau de menace), et les réglages précédents (tentatives, expiration, régénérations…) sont conservés',
+    ],
+  },
+  {
     version: '🤖 AI Playground & 💌 Demande de MP',
     date: '13 août 2026',
     changes: [
