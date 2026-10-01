@@ -42,7 +42,7 @@ async function generateProfileCard(user, userStats, serverStats, rank, totalBump
   const ctx    = canvas.getContext('2d');
 
   // ── Couleurs personnalisées (Feature E) — fallback exact sur les valeurs par défaut ──
-  const accentBase = (custom?.accentColor) || '#5865F2';
+  const accentBase = (custom?.accentColor) || '#8B1A1A';
 
   // ── Fond : bannière personnalisée si fournie et chargeable, sinon couleur perso, sinon dégradé par défaut ──
   let bgDrawn = false;
@@ -108,7 +108,7 @@ async function generateProfileCard(user, userStats, serverStats, rank, totalBump
   if (avatarImg) {
     ctx.drawImage(avatarImg, avatarX, avatarY, avatarSize, avatarSize);
   } else {
-    ctx.fillStyle = '#5865F2';
+    ctx.fillStyle = '#8B1A1A';
     ctx.fillRect(avatarX, avatarY, avatarSize, avatarSize);
   }
   ctx.restore();
@@ -141,7 +141,7 @@ async function generateProfileCard(user, userStats, serverStats, rank, totalBump
   // Remplissage barre
   if (progress > 0) {
     const barGrad = ctx.createLinearGradient(barX, barY, barX + barW * progress, barY);
-    barGrad.addColorStop(0, '#5865F2');
+    barGrad.addColorStop(0, '#8B1A1A');
     barGrad.addColorStop(1, '#57F287');
     ctx.fillStyle = barGrad;
     roundRect(ctx, barX, barY, barW * progress, barH, 8);

@@ -8,7 +8,9 @@
 // l'ancienne. Révocation, expiration ou déliaison → les features se
 // reverrouillent immédiatement (cache invalidé). Un cache mémoire de 60 s
 // évite une requête Mongo par interaction, comme utils/premium.js.
+const { EmbedBuilder } = require('discord.js');
 const License = require('../models/License');
+const { COLORS } = require('./embeds');
 
 // ── Commandes verrouillées par la licence ─────────────────────────────────────
 // Noms racines des commandes slash (et de leur équivalent préfixe) qui exigent
@@ -108,6 +110,19 @@ async function checkAccess(guildId, commandName) {
   return { ok: false, reason: status };
 }
 
+// Embed de verrouillage standard — utilisé partout où l'on exécute une commande
+// verrouillée autrement que par un slash command (boutons, panels embarqués…).
+function lockEmbed(commandName) {
+  return new EmbedBuilder()
+    .setColor(COLORS.warning)
+    .setTitle('🔒 Licence requise')
+    .setDescription(
+      `La commande \`/${commandName}\` fait partie du **système complet** Bumpify,\n`
+      + 'réservé aux serveurs disposant d\'une clé de licence.\n\n'
+      + '🔑 Un administrateur peut l\'activer avec : `/license activer cle:BUMP-…`\n'
+      + '(clé fournie par l\'owner du bot) — voir `/license statut`.');
+}
+
 // ── Activation / gestion ──────────────────────────────────────────────────────
 // Active une clé sur un serveur. Une seule licence par serveur : toute licence
 // précédemment liée à ce serveur est déliée (guildId remis à null).
@@ -189,6 +204,7 @@ module.exports = {
   isLicensed,
   isLicenseRequired,
   checkAccess,
+  lockEmbed,
   activateLicense,
   revokeLicense,
   unlinkGuild,

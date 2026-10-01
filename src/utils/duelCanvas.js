@@ -30,7 +30,7 @@ async function generateDuelImage(p1, p2, hp1, hp2, lastAction = null, shake = nu
   // Sol arène (ellipse)
   ctx.save();
   ctx.globalAlpha = 0.15;
-  ctx.fillStyle = '#5865F2';
+  ctx.fillStyle = '#8B1A1A';
   ctx.beginPath();
   ctx.ellipse(W/2, H - 30, 340, 35, 0, 0, Math.PI * 2);
   ctx.fill();
@@ -39,7 +39,7 @@ async function generateDuelImage(p1, p2, hp1, hp2, lastAction = null, shake = nu
   // VS texte central
   ctx.font = 'bold 38px Sans'; ctx.textAlign = 'center';
   const vsGrad = ctx.createLinearGradient(W/2-30, 0, W/2+30, 0);
-  vsGrad.addColorStop(0, '#ED4245'); vsGrad.addColorStop(1, '#5865F2');
+  vsGrad.addColorStop(0, '#ED4245'); vsGrad.addColorStop(1, '#8B1A1A');
   ctx.fillStyle = vsGrad;
   ctx.fillText('VS', W/2, 50);
   ctx.textAlign = 'left';
@@ -91,7 +91,7 @@ async function drawFighter(ctx, user, hp, x, y, flip, hit) {
   if (img) {
     ctx.drawImage(img, aX, aY, aSize, aSize);
   } else {
-    ctx.fillStyle = '#5865F2'; ctx.fillRect(aX, aY, aSize, aSize);
+    ctx.fillStyle = '#8B1A1A'; ctx.fillRect(aX, aY, aSize, aSize);
   }
   ctx.restore();
 

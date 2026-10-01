@@ -18,6 +18,15 @@ const { COLORS } = require('../../utils/embeds');
 
 const CHANGELOG = [
   {
+    version: '🎨 Identité rouge vin & sécurité licence renforcée',
+    date: 'octobre 2026',
+    changes: [
+      '**Nouvelle couleur de marque** — tous les embeds du bot passent au rouge vin (cartes de bienvenue, rangs, profils, relais inter-serveurs, annonces…)',
+      '**Bannière Bumpify** ajoutée en bas du panel d\'aide `/help`',
+      '**Trou de sécurité corrigé** — les boutons du message de mention et le panel central permettaient d\'ouvrir `/config` ou `/interserveur` sans licence ; le verrouillage s\'applique désormais partout',
+    ],
+  },
+  {
     version: '📖 Centre d\'aide & 🍯 Honeypot refondus',
     date: 'octobre 2026',
     changes: [

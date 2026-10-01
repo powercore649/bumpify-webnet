@@ -252,7 +252,7 @@ module.exports = {
           new ActionRowBuilder().addComponents(
             new TextInputBuilder().setCustomId('couleur').setLabel('Couleur en hex (ex: #5865F2)')
               .setStyle(TextInputStyle.Short).setRequired(false).setMaxLength(7)
-              .setValue(reg.color || '#5865F2'),
+              .setValue(reg.color || '#8B1A1A'),
           ),
           new ActionRowBuilder().addComponents(
             new TextInputBuilder().setCustomId('footer').setLabel('Pied de page (vide = par défaut)')
@@ -444,7 +444,7 @@ module.exports = {
 
       reg.title = titre;
       reg.description = intro;
-      reg.color = couleur || '#5865F2';
+      reg.color = couleur || '#8B1A1A';
       reg.footer = footer;
       reg.acceptLabel = label;
       reg.updatedAt = new Date();

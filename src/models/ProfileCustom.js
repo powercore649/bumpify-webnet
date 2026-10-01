@@ -4,7 +4,7 @@ const profileCustomSchema = new mongoose.Schema({
   guildId:    { type: String, required: true },
   bio:        { type: String, default: '' },
   quote:      { type: String, default: '' },
-  themeColor: { type: String, default: '#5865F2' },
+  themeColor: { type: String, default: '#8B1A1A' },
   bannerUrl:  { type: String, default: null },
   // ── Cartes de profil personnalisables (additif) ──────────────────────────
   bgColor:      { type: String,  default: null }, // couleur de fond personnalisée (hex), null = dégradé par défaut

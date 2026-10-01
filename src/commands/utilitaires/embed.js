@@ -22,7 +22,7 @@ function getOrCreateSession(userId) {
     sessions.set(userId, {
       title:       '',
       description: '',
-      color:       0x5865F2,
+      color:       COLORS.primary,
       footer:      '',
       imageURL:    '',
       thumbnailURL:'',

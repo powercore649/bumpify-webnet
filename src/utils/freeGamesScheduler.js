@@ -3,6 +3,7 @@
 // Indépendant du cron de ready.js — tourne en boucle toutes les minutes.
 
 const { FreeGamesConfig, PostedGame } = require('../models/FreeGames');
+const { COLORS } = require('./embeds');
 
 let schedulerStarted = false;
 
@@ -44,7 +45,7 @@ async function postForGuild(client, config) {
         const { sendNotification } = require('./notificationManager');
         const { EmbedBuilder }     = require('discord.js');
         const embed = new EmbedBuilder()
-          .setColor(0x5865F2)
+          .setColor(COLORS.primary)
           .setTitle(`🎮 ${result.posted} nouveau(x) jeu(x) gratuit(s) !`)
           .setDescription('De nouveaux jeux gratuits sont disponibles !\n\nUtilisez `/freegames voir` pour les découvrir.')
           .setTimestamp();

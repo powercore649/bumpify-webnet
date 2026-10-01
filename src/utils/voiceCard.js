@@ -17,8 +17,8 @@ function roundRect(ctx, x, y, w, h, r) {
 }
 
 function hexToRgb(hex) {
-  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '5865F2');
-  return m ? { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) } : { r: 88, g: 101, b: 242 };
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '8B1A1A');
+  return m ? { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) } : { r: 139, g: 26, b: 26 };
 }
 
 // ─── Icônes vectorielles (aucune dépendance à une police emoji) ──────────────
@@ -119,7 +119,7 @@ function drawStatChip(ctx, x, y, w, h, { icon, value, label, accent }) {
  * @param {{ liveSeconds:number, sessions:number, rank:number, totalTracked:number, topSeconds:number, active:boolean }} data
  * @param {string} accentColor hex
  */
-async function generateVoiceCard(member, data, accentColor = '#5865F2') {
+async function generateVoiceCard(member, data, accentColor = '#8B1A1A') {
   const W = 1000, H = 360;
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext('2d');

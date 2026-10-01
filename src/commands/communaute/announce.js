@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
-const { errorEmbed } = require('../../utils/embeds');
+const { COLORS, errorEmbed } = require('../../utils/embeds');
 module.exports = {
   data: new SlashCommandBuilder().setName('announce').setDescription('📢 Envoyer une annonce dans un salon')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
@@ -13,9 +13,9 @@ module.exports = {
     const msg     = interaction.options.getString('message');
     const ch      = interaction.options.getChannel('salon') || interaction.channel;
     const titre   = interaction.options.getString('titre') || '📢 Annonce';
-    const hex     = interaction.options.getString('couleur') || '#5865F2';
+    const hex     = interaction.options.getString('couleur') || '#8B1A1A';
     const pingAll = interaction.options.getBoolean('ping_everyone') || false;
-    const color   = parseInt(hex.replace('#',''),16) || 0x5865F2;
+    const color   = parseInt(hex.replace('#',''),16) || COLORS.primary;
 
     const embed = new EmbedBuilder()
       .setColor(color)

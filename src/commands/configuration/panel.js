@@ -9,6 +9,7 @@ const { CaptchaConfig }     = require('../../models/Captcha');
 const AutoMod               = require('../../models/AutoMod');
 const Honeypot              = require('../../models/Honeypot');
 const { COLORS }            = require('../../utils/embeds');
+const licenseGate           = require('../../utils/licenseGate');
 
 // ─── Modules par catégorie ─────────────────────────────────────────────────
 // direct: la commande n'a AUCUN subcommand → on peut lancer execute() sur
@@ -192,6 +193,12 @@ module.exports = {
 
           // ── Module embarquable : on ouvre son panel réel, directement ────
           if (mod.direct) {
+            // Même gate licence que la slash command équivalente (sinon le
+            // panel central permet de contourner le verrouillage).
+            if (interaction.guild && licenseGate.isLicenseRequired(mod.direct)
+                && !(await licenseGate.checkAccess(interaction.guild.id, mod.direct)).ok) {
+              return i.reply({ embeds: [licenseGate.lockEmbed(mod.direct)], ephemeral: true });
+            }
             const cmd = client.commands.get(mod.direct);
             if (cmd?.execute) {
               try {

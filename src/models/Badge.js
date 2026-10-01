@@ -5,7 +5,7 @@ const badgeSchema = new mongoose.Schema({
   name:        { type: String, required: true },
   emoji:       { type: String, default: '🏅' },
   description: { type: String, default: '' },
-  color:       { type: String, default: '#5865F2' },
+  color:       { type: String, default: '#8B1A1A' },
 });
 badgeSchema.index({ guildId: 1, badgeId: 1 }, { unique: true });
 

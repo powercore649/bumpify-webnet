@@ -31,15 +31,7 @@ module.exports = {
       if (interaction.inGuild() && licenseGate.isLicenseRequired(interaction.commandName)) {
         const access = await licenseGate.checkAccess(interaction.guildId, interaction.commandName);
         if (!access.ok) {
-          const lockEmbed = new EmbedBuilder()
-            .setColor(COLORS.warning)
-            .setTitle('🔒 Licence requise')
-            .setDescription(
-              `La commande \`/${interaction.commandName}\` fait partie du **système complet** Bumpify,\n` 
-              + 'réservé aux serveurs disposant d\'une clé de licence.\n\n'
-              + '🔑 Un administrateur peut l\'activer avec : `/license activer cle:BUMP-…`\n'
-              + '(clé fournie par l\'owner du bot) — voir `/license statut`.');
-          return interaction.reply({ embeds: [lockEmbed], ephemeral: true }).catch(() => {});
+          return interaction.reply({ embeds: [licenseGate.lockEmbed(interaction.commandName)], ephemeral: true }).catch(() => {});
         }
       }
 
@@ -491,13 +483,22 @@ module.exports = {
         return;
       }
 
-      // Ping bot → ouvrir commande
+      // Ping bot → ouvrir commande.
+      // ⚠️ Même gate licence que les slash commands : sans cela, les boutons du
+      // message de mention permettent de contourner le verrouillage de /config,
+      // /interserveur, etc.
       if (id.startsWith('ping_open_')) {
         const action  = id.replace('ping_open_', '');
         const cmdName = { config: 'config', interserveur: 'interserveur', help: 'help', panel: 'panel' }[action];
         if (cmdName) {
           const cmd = client.commands.get(cmdName);
-          if (cmd) await cmd.execute(interaction, client).catch(console.error);
+          if (cmd) {
+            if (interaction.inGuild() && licenseGate.isLicenseRequired(cmdName)
+                && !(await licenseGate.checkAccess(interaction.guildId, cmdName)).ok) {
+              return interaction.reply({ embeds: [licenseGate.lockEmbed(cmdName)], ephemeral: true }).catch(() => {});
+            }
+            await cmd.execute(interaction, client).catch(console.error);
+          }
         }
         return;
       }

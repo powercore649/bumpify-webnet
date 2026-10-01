@@ -239,7 +239,7 @@ async function autoPostFreeGames(client, force = false) {
           try {
             const { sendNotification } = require('../../utils/notificationManager');
             const notifEmbed = new (require('discord.js').EmbedBuilder)()
-              .setColor(0x5865F2)
+              .setColor(COLORS.primary)
               .setTitle(`🎮 ${result.posted} nouveau(x) jeu(x) gratuit(s) !`)
               .setDescription(`De nouveaux jeux gratuits sont disponibles sur votre serveur !
 

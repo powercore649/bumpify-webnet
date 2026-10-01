@@ -15,7 +15,7 @@ function makeDoc(data) {
     title: '',
     description: '',
     footer: '',
-    color: '#5865F2',
+    color: '#8B1A1A',
     acceptLabel: '✅ J\'accepte le règlement',
     showNumbering: true,
     acceptCount: 0,

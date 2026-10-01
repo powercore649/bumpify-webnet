@@ -19,7 +19,7 @@ const xpConfigSchema = new mongoose.Schema({
   announceLevelUp:     { type: Boolean, default: true },
   levelUpChannelId:    { type: String, default: null }, // null = salon où le message a été envoyé
   useCardOnLevelUp:    { type: Boolean, default: true },
-  cardColor:           { type: String, default: '#5865F2' },
+  cardColor:           { type: String, default: '#8B1A1A' },
   silentChannels:      { type: [String], default: [] }, // XP gagné normalement, mais aucune annonce de level-up si déclenché ici
 });
 

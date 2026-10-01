@@ -3,6 +3,7 @@
 
 const crypto = require('crypto');
 const AuthProfile = require('../models/AuthProfile');
+const { COLORS } = require('./embeds');
 
 const MAX_LOGS = 50;
 const PIN_LOCK_THRESHOLD = 5;
@@ -125,7 +126,7 @@ function computeGrade(profile) {
 
   const GRADE_META = {
     A: { emoji: '🟩', color: 0x57F287, tip: 'Excellent ! Votre compte est très bien protégé.' },
-    B: { emoji: '🟦', color: 0x5865F2, tip: 'Très bon niveau de sécurité.' },
+    B: { emoji: '🟫', color: COLORS.wine, tip: 'Très bon niveau de sécurité.' },
     C: { emoji: '🟨', color: 0xFEE75C, tip: 'Ajoutez une Passkey ou activez la 2FA pour améliorer votre grade.' },
     D: { emoji: '🟧', color: 0xF39C12, tip: 'Activez la 2FA pour améliorer votre grade de sécurité.' },
     E: { emoji: '🟧', color: 0xE67E22, tip: 'Votre code PIN est trop simple. Changez-le puis activez la 2FA.' },

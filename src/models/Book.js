@@ -13,7 +13,7 @@ const bookSchema = new mongoose.Schema({
   ownerId:     { type: String, required: true },
   title:       { type: String, required: true, maxlength: 100 },
   description: { type: String, default: null, maxlength: 300 },
-  coverColor:  { type: String, default: '#5865F2' },
+  coverColor:  { type: String, default: '#8B1A1A' },
   coverImage:  { type: String, default: null },
   chapters:    { type: [chapterSchema], default: [] },
   sharedWith:  { type: [String], default: [] }, // userIds autorisés à consulter

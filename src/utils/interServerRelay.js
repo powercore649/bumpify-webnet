@@ -7,6 +7,7 @@ const {
   ButtonStyle,
 } = require('discord.js');
 const InterServer = require('../models/InterServer');
+const { COLORS } = require('./embeds');
 
 const MAX_CONTENT_LENGTH = 1900;
 const RELAY_COOLDOWN_MS  = 500;
@@ -48,11 +49,9 @@ function sanitizeContent(content, config) {
 function buildMessageEmbed(message, sourceConfig, replyInfo) {
   const guild   = message.guild;
   const author  = message.author;
-  const content = sanitizeContent(message.content, sourceConfig);
-
-  const embed = new EmbedBuilder()
-    .setColor(0x5865F2)
-    .setAuthor({
+  const content = sanitizeContent(message.content, sourceConfig);  const embed = new EmbedBuilder()
+  .setColor(COLORS.primary)
+  .setAuthor({
       name:    `${author.username}`,
       iconURL: author.displayAvatarURL({ extension: 'png', size: 128 }),
     })
@@ -154,7 +153,7 @@ async function relayMessage(message, sourceConfig) {
 
       if (imageAttachments.length > 0 && !target.compact) {
         imageAttachments.slice(0, 3).forEach(img => {
-          embeds.push(new EmbedBuilder().setImage(img.url).setColor(0x5865F2).toJSON());
+          embeds.push(new EmbedBuilder().setImage(img.url).setColor(COLORS.primary).toJSON());
         });
       }
 

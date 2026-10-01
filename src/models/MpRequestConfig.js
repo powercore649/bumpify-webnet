@@ -8,7 +8,7 @@ const mpRequestConfigSchema = new mongoose.Schema({
   enabled:   { type: Boolean, default: false },
   channelId: { type: String, default: null },
 
-  embedColor:      { type: String, default: '5865F2' }, // hex sans #
+  embedColor:      { type: String, default: '8B1A1A' }, // hex sans #
   threadNameTemplate: { type: String, default: '💬 Demande de {username}' },
   autoArchiveMinutes: { type: Number, default: 1440 }, // 1 jour
 

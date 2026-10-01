@@ -49,8 +49,8 @@ module.exports = {
             {
               label: 'Utilisations des invitations',
               data: values,
-              backgroundColor: '#5865F2',
-              borderColor: '#4752C4',
+              backgroundColor: '#8B1A1A',
+              borderColor: '#6E1414',
               borderWidth: 2,
               borderRadius: 6
             }

@@ -22,7 +22,7 @@ function buildOverviewEmbed(cfg, guild) {
     : '*Aucune question configurée.*';
 
   return new EmbedBuilder()
-    .setColor(0x5865F2)
+    .setColor(COLORS.primary)
     .setTitle('🚪 Portail d\'accès — Onboarding')
     .setDescription('Crée un salon privé pour chaque nouveau membre, pose des questions, et lui donne accès au serveur une fois terminé.')
     .addFields(
@@ -78,7 +78,7 @@ function buildQuestionsEmbed(cfg) {
     : '*Aucune question pour l\'instant.*';
 
   return new EmbedBuilder()
-    .setColor(0x5865F2)
+    .setColor(COLORS.primary)
     .setTitle('📋 Questions configurées')
     .setDescription(lines);
 }

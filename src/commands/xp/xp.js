@@ -53,14 +53,14 @@ async function getOrCreateXp(guildId, userId) {
 }
 
 function hexToRgb(hex) {
-  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '5865F2');
-  return m ? { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) } : { r: 88, g: 101, b: 242 };
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '8B1A1A');
+  return m ? { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) } : { r: 139, g: 26, b: 26 };
 }
 
 // ─── Génère la carte de niveau (utilisée par /rank et par l'annonce de level-up) ──
 // Layout : avatar + nom + "Level N" en haut, grande barre de progression pleine
 // largeur, puis "XP until next level" / "Total XP" sous la barre.
-async function generateRankCard(member, xpDoc, rank, accentColor = '#5865F2') {
+async function generateRankCard(member, xpDoc, rank, accentColor = '#8B1A1A') {
   const W = 934, H = 282;
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext('2d');

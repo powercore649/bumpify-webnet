@@ -16,16 +16,20 @@ const {
 } = require('discord.js');
 const { getAppEmoji } = require('../../utils/emojiSync');
 
+const { COLORS } = require('../../utils/embeds');
+
 const SITE_URL    = 'https://zyntra.dpdns.org';
 const SUPPORT_URL = 'https://discord.gg/ts5mh326ew';
-const BRAND_COLOR = 0x5865F2;
+const BRAND_COLOR = COLORS.wine; // rouge vin Bumpify
+// Bannière affichée en bas de l'accueil de l'aide (hébergée sur le site)
+const HELP_BANNER = 'https://zyntra.dpdns.org/banners/help-banner.jpg';
 
 // ─── Catégories de commandes ─────────────────────────────────────────────────
 const CATEGORIES = {
   bump: {
     emoji: '🚀',
     label: 'Bump & Réseau',
-    color: 0x5865F2,
+    color: COLORS.wine,
     blurb: 'Faites connaître votre serveur à travers tout le réseau Bumpify.',
     commands: [
       { name: '/bump',        desc: 'Bumper votre serveur (cooldown : 2h)' },
@@ -49,7 +53,7 @@ const CATEGORIES = {
   moderation: {
     emoji: '🛡️',
     label: 'Modération & Sécurité',
-    color: 0xED4245,
+    color: COLORS.wine,
     blurb: 'Gardez votre serveur sain : sanctions, anti-raid, logs. `/ban`, `/kick`, `/raidmode` et `/forceleave` se verrouillent automatiquement derrière votre PIN si vous en avez configuré un via `/auth-profil`.',
     commands: [
       { name: '/ban',     desc: 'Bannir un membre' },
@@ -83,7 +87,7 @@ const CATEGORIES = {
   config: {
     emoji: '⚙️',
     label: 'Configuration',
-    color: 0x99AAB5,
+    color: COLORS.wine,
     blurb: 'Tout ce qu\'il faut pour mettre Bumpify à votre image.',
     commands: [
       { name: '/panel',       desc: 'Panel de configuration central *(Admin)*' },
@@ -114,7 +118,7 @@ const CATEGORIES = {
   economy: {
     emoji: '💰',
     label: 'Économie & Jeux',
-    color: 0xFEE75C,
+    color: COLORS.wine,
     blurb: 'Coins, paris et mini-jeux pour faire vivre votre communauté.',
     commands: [
       { name: '/balance', desc: 'Voir votre solde de coins' },
@@ -133,7 +137,7 @@ const CATEGORIES = {
   xp: {
     emoji: '🏆',
     label: 'Niveaux & XP',
-    color: 0xEB459E,
+    color: COLORS.wine,
     blurb: 'Récompensez l\'activité de vos membres.',
     commands: [
       { name: '/xp rank',        desc: 'Voir ton niveau et ton XP' },
@@ -145,7 +149,7 @@ const CATEGORIES = {
   community: {
     emoji: '🎉',
     label: 'Communauté',
-    color: 0x57F287,
+    color: COLORS.wine,
     blurb: 'Animez votre serveur : événements, sondages, tickets.',
     commands: [
       { name: '/giveaway',  desc: 'Créer et gérer des giveaways' },
@@ -173,7 +177,7 @@ const CATEGORIES = {
   utility: {
     emoji: '🔧',
     label: 'Utilitaires',
-    color: 0x5BC0EB,
+    color: COLORS.wine,
     blurb: 'Informations pratiques et outils du quotidien.',
     commands: [
       { name: '/server-info',  desc: 'Informations sur le serveur' },
@@ -205,7 +209,7 @@ const CATEGORIES = {
   fun: {
     emoji: '🎲',
     label: 'Fun',
-    color: 0xF47B67,
+    color: COLORS.wine,
     blurb: 'Un peu de légèreté entre deux bumps.',
     commands: [
       { name: '/8ball',    desc: 'Poser une question à la boule magique' },
@@ -225,7 +229,7 @@ const CATEGORIES = {
   owner: {
     emoji: '🔑',
     label: 'Propriétaire du Bot',
-    color: 0x2C2F33,
+    color: COLORS.wine,
     blurb: 'Commandes réservées aux propriétaires de Bumpify (pas aux admins de serveur).',
     commands: [
       { name: '/premium-admin', desc: 'Gérer le Premium d\'un serveur' },
@@ -436,6 +440,7 @@ function buildMainEmbed(client) {
         inline: true,
       },
     )
+    .setImage(HELP_BANNER)
     .setFooter({ text: `Bumpify • ${TOTAL_COMMANDS} commandes • ${Object.keys(DOCS).length} articles de documentation` })
     .setTimestamp();
 }
@@ -653,7 +658,7 @@ module.exports = {
     if (!isOwner(interaction)) return rejectNotOwner(interaction);
     const pick = ALL_COMMANDS_FLAT[Math.floor(Math.random() * ALL_COMMANDS_FLAT.length)];
     const embed = new EmbedBuilder()
-      .setColor(0x57F287)
+      .setColor(COLORS.wine)
       .setTitle('🎲 Le savais-tu ?')
       .setDescription(`${pick.categoryEmoji} \`${pick.name}\`\n╰ *${pick.desc}*\n\nCatégorie : **${pick.categoryLabel}**`)
       .setFooter({ text: 'Reclique sur Découvrir pour une autre commande !' });
@@ -663,7 +668,7 @@ module.exports = {
   async handleWhatsNew(interaction) {
     if (!isOwner(interaction)) return rejectNotOwner(interaction);
     const embed = new EmbedBuilder()
-      .setColor(0x57F287)
+      .setColor(COLORS.wine)
       .setTitle('🆕 Nouveautés')
       .setDescription(WHATS_NEW.map(f => `\`${f.name}\`\n╰ *${f.desc}*`).join('\n\n'))
       .setFooter({ text: 'Ces commandes sont aussi listées dans leur catégorie habituelle.' });

@@ -1,6 +1,7 @@
 // utils/bumpNetwork.js — Réseau de bumps complet v2
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const Server = require('../models/Server');
+const { COLORS } = require('./embeds');
 
 const BUMP_COOLDOWN_MS  = 2 * 60 * 60 * 1000; // 2h
 const BUMP_COINS_REWARD = 50;
@@ -42,7 +43,7 @@ async function broadcastBump(client, sourceServer, bumperUser) {
   const nextBumpTs = Math.floor((Date.now() + BUMP_COOLDOWN_MS) / 1000);
 
   const embed = new EmbedBuilder()
-    .setColor(isFeatured ? 0xFFD700 : 0x5865F2)
+    .setColor(isFeatured ? 0xFFD700 : COLORS.primary)
     .setAuthor({
       name: isFeatured ? '⭐ Serveur mis en avant !' : '🚀 Nouveau serveur bumpé !',
       iconURL: client.user.displayAvatarURL(),

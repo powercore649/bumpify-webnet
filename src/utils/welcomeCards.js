@@ -55,7 +55,7 @@ function drawAvatar(ctx, url, x, y, size, ringColors) {
   ctx.beginPath();
   ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
   ctx.clip();
-  ctx.fillStyle = ringColors ? ringColors[0] : '#5865F2';
+  ctx.fillStyle = ringColors ? ringColors[0] : '#8B1A1A';
   ctx.fillRect(x, y, size, size);
   ctx.restore();
 
@@ -112,14 +112,14 @@ async function drawGradient(ctx, member, guild, opts) {
   for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
 
   const l = ctx.createLinearGradient(0, 0, 0, H);
-  l.addColorStop(0, '#5865F2');
+  l.addColorStop(0, '#8B1A1A');
   l.addColorStop(1, '#EB459E');
   ctx.fillStyle = l;
   ctx.fillRect(0, 0, 6, H);
   ctx.fillRect(W - 6, 0, 6, H);
 
   await drawAvatar(ctx, member.user.displayAvatarURL({ extension: 'png', size: 256 }),
-    W / 2 - 70, 26, 140, ['#5865F2', '#EB459E']);
+    W / 2 - 70, 26, 140, ['#8B1A1A', '#EB459E']);
 
   ctx.textAlign = 'center';
   ctx.fillStyle = 'rgba(88,101,242,0.95)';
@@ -211,7 +211,7 @@ async function drawBanner(ctx, member, guild, opts) {
   ctx.moveTo(0, 0); ctx.lineTo(W, 0); ctx.lineTo(W, 150); ctx.lineTo(0, 210);
   ctx.closePath();
   const band = ctx.createLinearGradient(0, 0, W, 150);
-  band.addColorStop(0, '#5865F2');
+  band.addColorStop(0, '#8B1A1A');
   band.addColorStop(1, '#EB459E');
   ctx.fillStyle = band;
   ctx.fill();
@@ -228,7 +228,7 @@ async function drawBanner(ctx, member, guild, opts) {
 
   // Pastille avatar décalée à gauche
   await drawAvatar(ctx, member.user.displayAvatarURL({ extension: 'png', size: 256 }),
-    92, 118, 152, ['#5865F2', '#EB459E']);
+    92, 118, 152, ['#8B1A1A', '#EB459E']);
 
   // Textes à droite
   ctx.textAlign = 'left';
@@ -264,11 +264,11 @@ async function drawMinimal(ctx, member, guild, opts) {
   // Petit accent coloré en haut
   ctx.fillStyle = '#1d1d1f';
   ctx.fillRect(24, 24, 120, 6);
-  ctx.fillStyle = '#5865F2';
+  ctx.fillStyle = '#8B1A1A';
   ctx.fillRect(24, 24, 40, 6);
 
   await drawAvatar(ctx, member.user.displayAvatarURL({ extension: 'png', size: 256 }),
-    W / 2 - 58, 58, 116, ['#1d1d1f', '#5865F2']);
+    W / 2 - 58, 58, 116, ['#1d1d1f', '#8B1A1A']);
 
   ctx.textAlign = 'center';
   ctx.fillStyle = '#1d1d1f';
@@ -323,7 +323,7 @@ async function renderWelcomeImage(member, guild, config) {
   if (customBgApplied) {
     // Fond personnalisé : rendu par-dessus en style gradient simplifié
     await drawAvatar(ctx, member.user.displayAvatarURL({ extension: 'png', size: 256 }),
-      W / 2 - 70, 26, 140, ['#5865F2', '#EB459E']);
+      W / 2 - 70, 26, 140, ['#8B1A1A', '#EB459E']);
     ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(255,255,255,0.9)';
     ctx.font = 'bold 20px Sans';

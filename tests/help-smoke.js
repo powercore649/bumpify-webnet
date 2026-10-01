@@ -64,6 +64,8 @@ const snap = (p) => JSON.parse(JSON.stringify(p, (k, v) => typeof v === 'bigint'
     return new Set(ids).size === ids.length;
   })());
   check('A4 — accueil : mention des systèmes de sécurité', has(home, '/antiraid') && has(home, '/honeypot') && has(home, '/captcha'));
+  check('A5 — accueil : bannière Bumpify en image', has(home, 'banners/help-banner.jpg'));
+  check('A6 — accueil : couleur rouge vin (8B1A1A)', has(home, (0x8B1A1A).toString()));
 
   // ══ B. Navigation catégories ═════════════════════════════════════════════
   const iCat = makeInteraction({ customId: 'help_category', values: ['bump'] });
@@ -143,6 +145,11 @@ const snap = (p) => JSON.parse(JSON.stringify(p, (k, v) => typeof v === 'bigint'
   check('H2 — routeur : help_home/search/random routés', routesSrc.includes("'help_home'") && routesSrc.includes("'help_search'") && routesSrc.includes("'help_random'"));
   check('H3 — routeur : ancien guide help_guide_* retiré', !routesSrc.includes('help_guide'));
   check('H4 — routeur : help_category/help_docs/help_search_modal routés', routesSrc.includes("'help_category'") && routesSrc.includes("'help_docs'") && routesSrc.includes("'help_search_modal'"));
+
+  // ══ H+. Gates licence — pas de contournement via boutons/panels ═══════
+  check('H5 — routeur : gate licence sur les boutons ping_open_', routesSrc.includes('licenseGate.isLicenseRequired(cmdName)'));
+  const panelSrc = fs.readFileSync(require.resolve('../src/commands/configuration/panel.js'), 'utf8');
+  check('H6 — panel central : gate licence sur les modules directs', panelSrc.includes('licenseGate.isLicenseRequired(mod.direct)'));
 
   // ══ I. Aucun handler hérité du guide (mort) ══════════════════════════════
   check('I1 — help : pas de handler guide résiduel', !cmd.handleGuideStart && !cmd.handleGuideStep && !cmd.handleGuideNav);
