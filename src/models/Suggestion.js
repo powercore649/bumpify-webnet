@@ -35,6 +35,10 @@ const suggestionConfigSchema = new mongoose.Schema({
   logChannelId:       { type: String, default: null },
   enabled:            { type: Boolean, default: false },
 
+  // ── Logs avancés ──
+  // null = tous les événements relayés ; sinon objet { eventKey: boolean }
+  logTypes:           { type: mongoose.Schema.Types.Mixed, default: null },
+
   // ── Anti-abus ──
   cooldownMinutes:    { type: Number, default: 0 },     // 0 = désactivé
   requiredRoleId:     { type: String, default: null },  // rôle requis pour proposer, null = tout le monde

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-28T20:23:38.716Z",
+  "generatedAt": "2026-10-01T15:50:41.015Z",
   "total": 108,
   "categories": [
     {
@@ -1804,7 +1804,7 @@
         },
         {
           "name": "suggestion",
-          "description": "💡 Système de suggestions avancé",
+          "description": "💡 Système de suggestions (v2)",
           "category": "communaute",
           "file": "src/commands/communaute/suggestion.js",
           "defaultMemberPermissions": null,

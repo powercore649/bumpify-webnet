@@ -86,9 +86,10 @@ module.exports = {
         if (cmd?.handleModal) await cmd.handleModal(interaction).catch(console.error);
         return;
       }
-      if (id.startsWith('sugpanel_')) {
+      // Suggestion v2 — modaux du panneau (anti-abus, seuils)
+      if (id.startsWith('sugm_modal_')) {
         const cmd = client.commands.get('suggestion');
-        if (cmd?.handleModal) await cmd.handleModal(interaction).catch(console.error);
+        if (cmd?.handleModal) await cmd.handleModal(interaction, client).catch(console.error);
         return;
       }
       if (id.startsWith('avispanel_')) {
@@ -327,6 +328,13 @@ module.exports = {
         return;
       }
 
+      // Suggestion v2 — menus du panneau de configuration
+      if (interaction.customId.startsWith('sugc_')) {
+        const cmd = client.commands.get('suggestion');
+        if (cmd?.handleSelect) await cmd.handleSelect(interaction, client).catch(console.error);
+        return;
+      }
+
       // Règlement v2 — menus du panneau /reglement
       if (interaction.customId.startsWith('regls_')) {
         const cmd = client.commands.get('reglement');
@@ -367,8 +375,12 @@ module.exports = {
       // Pagination Twitch — gérée par le collecteur interne de la commande
       if (id.startsWith('twpage_')) return;
 
-      // Panel de suggestions & stats en direct — gérés par les collecteurs internes de suggestion.js
-      if (id.startsWith('sugpanel_') || id.startsWith('sugstats_')) return;
+      // Suggestion v2 — boutons du panneau de config (sugc_) + modération persistante (sugm_)
+      if (id.startsWith('sugc_') || id.startsWith('sugm_')) {
+        const cmd = client.commands.get('suggestion');
+        if (cmd?.handleButton) await cmd.handleButton(interaction, client).catch(console.error);
+        return;
+      }
 
       // Panel d'avis, stats en direct, navigation "voir" — gérés par les collecteurs internes de avis.js
       if (id.startsWith('avispanel_') || id.startsWith('avisstats_') || id.startsWith('avis_prev') || id.startsWith('avis_next') || id.startsWith('avis_close') || id.startsWith('avis_helpful_') || id.startsWith('avis_report') || id.startsWith('avis_reply')) return;
@@ -831,7 +843,6 @@ module.exports = {
     if (interaction.isAnySelectMenu()) {
       const id = interaction.customId;
       const internalIds = [
-        'sug_set_channel','sug_toggle',
         'ticket_set_category','ticket_set_log','ticket_set_role','ticket_config_action','ticket_back','ticket_noop',
         'config_category','config_language','config_bump_channel','config_feed_channel','config_log_channel','config_bump_role',
         'captcha_channel_select','captcha_role_before_select','captcha_role_after_select','captcha_security_select',
@@ -845,7 +856,6 @@ module.exports = {
         'sb_select_channel','sb_select_ignored_channels','sb_select_ignored_roles',
         'rd_select','rd_select_channel','rd_select_role','rd_select_sort',
         'ob_select_category','ob_select_access_role','ob_select_question',
-        'sugpanel_',
         'avispanel_',
         'bumpnotif_',
         'mpreq_',

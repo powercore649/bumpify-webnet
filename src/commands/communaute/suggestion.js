@@ -1,12 +1,14 @@
 'use strict';
-// commands/suggestion.js — Système de suggestions avancé
-// - Panel de configuration complet (/suggestion panel)
-// - Statistiques en temps réel avec mode direct (/suggestion stats)
-// - Logs configurables (relayés dans un salon si activé dans le panel)
-// - Transcript web avancé (bouton "📄 Transcript" → page HTML)
-// - Anti-abus (cooldown, rôle requis), catégories, votes modifiables,
-//   auto-approbation/refus par seuil de votes, suggestions anonymes,
-//   fil de discussion automatique, notification DM, épinglage.
+// commands/suggestion.js — Système de suggestions v2 (sans dashboard)
+//
+// - Configuration via UN SEUL panneau éphémère (/suggestion config), 5 rangées max :
+//   menus salon + logs + logs avancés, bouton statut, bouton anti-abus (modal),
+//   bouton catégories (menu), logs DM, seuils auto (modal).
+// - Flux direct par sous-commandes : proposer / approuver / refuser / modifier /
+//   supprimer / top / stats — aucun dashboard de navigation.
+// - Boutons de modération persistants (résoudre/épingler) sur les messages publics,
+//   et votes 👍/👎 persistants gérés par interactionCreate (handleVote).
+// - Logs avancés : chaque type d'événement est filtrable individuellement.
 
 const {
   SlashCommandBuilder,
@@ -16,7 +18,6 @@ const {
   ButtonStyle,
   StringSelectMenuBuilder,
   ChannelSelectMenuBuilder,
-  RoleSelectMenuBuilder,
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
@@ -25,7 +26,7 @@ const {
 } = require('discord.js');
 
 const { Suggestion, SuggestionConfig, CATEGORY_KEYS } = require('../../models/Suggestion');
-const { logAction, getHistory, formatLogLine } = require('../../utils/suggestionLogger');
+const { logAction, LOG_TYPE_KEYS, LOG_TYPE_LABELS, isLogTypeEnabled } = require('../../utils/suggestionLogger');
 const { computeStats, renderBarChart } = require('../../utils/suggestionStats');
 const { checkCooldown, checkRequiredRole, applyVote, checkAutoResolve } = require('../../utils/suggestionEngine');
 const { COLORS, successEmbed, errorEmbed, infoEmbed } = require('../../utils/embeds');
@@ -42,9 +43,7 @@ const CATEGORY_LABELS = {
 const STATUS_COLORS = { pending: COLORS.warning, approved: COLORS.success, denied: COLORS.error };
 const STATUS_LABELS = { pending: '⏳ En attente', approved: '✅ Approuvée', denied: '❌ Refusée' };
 
-const COLLECTOR_TIMEOUT_MS = 10 * 60 * 1000;
-const LIVE_STATS_DURATION_MS = 90 * 1000;
-const LIVE_STATS_INTERVAL_MS = 5 * 1000;
+const CONFIG_TIMEOUT_MS = 10 * 60 * 1000;
 
 function isMod(interaction) {
   return interaction.member?.permissions?.has(PermissionFlagsBits.ManageGuild);
@@ -78,7 +77,7 @@ function buildSuggestionEmbed(suggestion, author, config) {
   if (suggestion.anonymous) {
     embed.setFooter({ text: 'Proposée anonymement 🕵️' });
   } else {
-    embed.setFooter({ text: `Proposé par ${author?.username ?? 'Inconnu'}`, iconURL: author?.displayAvatarURL() });
+    embed.setFooter({ text: `Proposé par ${author?.username ?? 'Inconnu'}`, iconURL: author?.displayAvatarURL?.() });
   }
 
   if (suggestion.reason) {
@@ -102,6 +101,15 @@ function buildVoteRow(suggestion, config) {
   return row;
 }
 
+/** Boutons de modération visibles uniquement par les modérateurs (Discord gère la visibilité). */
+function buildModRow(suggestion) {
+  return new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId(`sugm_approve_${suggestion._id}`).setLabel('Résoudre (approuver)').setStyle(ButtonStyle.Success).setEmoji('✅').setDisabled(suggestion.status !== 'pending'),
+    new ButtonBuilder().setCustomId(`sugm_deny_${suggestion._id}`).setLabel('Refuser').setStyle(ButtonStyle.Danger).setEmoji('❌').setDisabled(suggestion.status !== 'pending'),
+    new ButtonBuilder().setCustomId(`sugm_pin_${suggestion._id}`).setLabel(suggestion.pinned ? 'Désépingler' : 'Épingler').setStyle(ButtonStyle.Secondary).setEmoji('📌'),
+  );
+}
+
 async function refreshSuggestionMessage(client, suggestion, config) {
   try {
     const channel = await client.channels.fetch(suggestion.channelId).catch(() => null);
@@ -109,7 +117,7 @@ async function refreshSuggestionMessage(client, suggestion, config) {
     const msg = await channel.messages.fetch(suggestion.messageId).catch(() => null);
     if (!msg) return;
     const author = suggestion.anonymous ? null : await client.users.fetch(suggestion.authorId).catch(() => null);
-    await msg.edit({ embeds: [buildSuggestionEmbed(suggestion, author, config)], components: [buildVoteRow(suggestion, config)] });
+    await msg.edit({ embeds: [buildSuggestionEmbed(suggestion, author, config)], components: [buildVoteRow(suggestion, config), buildModRow(suggestion)] });
   } catch (_) {}
 }
 
@@ -130,177 +138,104 @@ async function notifyAuthor(client, suggestion, config, statusLabel) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  PANEL DE CONFIGURATION AVANCÉ
+//  PANNEAU DE CONFIGURATION UNIQUE (éphémère, 5 rangées max)
 // ═══════════════════════════════════════════════════════════════════════════
-function renderOverview(config) {
+function buildConfigPanel(config, client) {
+  const lt = config.logTypes;
+  const logsSummary = LOG_TYPE_KEYS.filter(k => isLogTypeEnabled(config, k)).length;
+
   const embed = new EmbedBuilder()
     .setColor(COLORS.primary)
-    .setTitle('💡 Panel — Système de Suggestions')
-    .setDescription('Configurez chaque aspect du système depuis ce panel.')
+    .setTitle('💡 Configuration — Système de Suggestions')
+    .setDescription('Panneau unique : tout se règle ici. Les boutons **Anti-abus** et **Seuils auto** ouvrent un petit formulaire, le reste se règle par menu.')
     .addFields(
-      { name: '📢 Statut',        value: config.enabled ? '🟢 Activé' : '🔴 Désactivé', inline: true },
-      { name: '📝 Salon',         value: config.channelId ? `<#${config.channelId}>` : '*Non défini*', inline: true },
-      { name: '📋 Salon de logs', value: config.logChannelId ? `<#${config.logChannelId}>` : '*Aucun*', inline: true },
-      { name: '🕒 Cooldown',      value: config.cooldownMinutes > 0 ? `${config.cooldownMinutes} min` : '*Désactivé*', inline: true },
-      { name: '🔒 Rôle requis',   value: config.requiredRoleId ? `<@&${config.requiredRoleId}>` : '*Aucun*', inline: true },
-      { name: '📄 Transcript web', value: config.transcriptEnabled ? '🟢 Activé' : '🔴 Désactivé', inline: true },
-      { name: '🕵️ Anonymat',      value: config.anonymousAllowed ? '🟢 Autorisé' : '🔴 Interdit', inline: true },
-      { name: '💬 Fil auto',      value: config.autoThread ? '🟢 Activé' : '🔴 Désactivé', inline: true },
-      { name: '📩 DM Auteur',     value: config.dmNotify ? '🟢 Activé' : '🔴 Désactivé', inline: true },
+      { name: '📢 Statut',           value: config.enabled ? '🟢 Activé' : '🔴 Désactivé', inline: true },
+      { name: '📝 Salon',            value: config.channelId ? `<#${config.channelId}>` : '*Non défini*', inline: true },
+      { name: '📋 Salon de logs',    value: config.logChannelId ? `<#${config.logChannelId}>` : '*Aucun*', inline: true },
+      { name: '🕒 Cooldown',         value: config.cooldownMinutes > 0 ? `${config.cooldownMinutes} min` : '*Désactivé*', inline: true },
+      { name: '🔒 Rôle requis',      value: config.requiredRoleId ? `<@&${config.requiredRoleId}>` : '*Aucun*', inline: true },
+      { name: '🏷️ Catégories',       value: (config.categoriesEnabled || []).length ? `${(config.categoriesEnabled || []).length}/${CATEGORY_KEYS.length} actives` : '*Aucune*', inline: true },
+      { name: '🕵️ Anonymat',         value: config.anonymousAllowed ? '🟢 Autorisé' : '🔴 Interdit', inline: true },
+      { name: '💬 Fil auto',         value: config.autoThread ? '🟢 Activé' : '🔴 Désactivé', inline: true },
+      { name: '📩 DM auteur',        value: config.dmNotify ? '🟢 Activé' : '🔴 Désactivé', inline: true },
       { name: '🤖 Auto-approbation', value: config.autoApproveAt > 0 ? `≥ +${config.autoApproveAt} votes nets` : '*Désactivée*', inline: true },
-      { name: '🤖 Auto-refus',    value: config.autoDenyAt > 0 ? `≤ -${config.autoDenyAt} votes nets` : '*Désactivé*', inline: true },
-      { name: '🏷️ Catégories actives', value: (config.categoriesEnabled || []).map(c => CATEGORY_LABELS[c] || c).join(', ') || '*Aucune*', inline: false },
+      { name: '🤖 Auto-refus',       value: config.autoDenyAt > 0 ? `≤ -${config.autoDenyAt} votes nets` : '*Désactivé*', inline: true },
+      { name: '🧾 Logs avancés',     value: logsSummary === LOG_TYPE_KEYS.length ? `Tous (${LOG_TYPE_KEYS.length} types)` : `${logsSummary}/${LOG_TYPE_KEYS.length} types`, inline: true },
     )
+    .setFooter({ text: "Panneau éphémère — ne disparaît que pour vous après 10 min d'inactivité" })
     .setTimestamp();
 
+  // Rangée 1 — salon des suggestions + salon de logs
   const row1 = new ActionRowBuilder().addComponents(
-    new ChannelSelectMenuBuilder().setCustomId('sugpanel_channel').setPlaceholder('📝 Choisir le salon des suggestions...').addChannelTypes(ChannelType.GuildText),
-  );
-  const row2 = new ActionRowBuilder().addComponents(
-    new ChannelSelectMenuBuilder().setCustomId('sugpanel_logchannel').setPlaceholder('📋 Choisir le salon de logs (optionnel)...').addChannelTypes(ChannelType.GuildText),
-  );
-  const row3 = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('sugpanel_toggle_enabled').setLabel(config.enabled ? 'Désactiver' : 'Activer').setStyle(config.enabled ? ButtonStyle.Danger : ButtonStyle.Success).setEmoji('📢'),
-    new ButtonBuilder().setCustomId('sugpanel_view_antiabuse').setLabel('Anti-abus').setStyle(ButtonStyle.Secondary).setEmoji('🕒'),
-    new ButtonBuilder().setCustomId('sugpanel_view_features').setLabel('Fonctionnalités').setStyle(ButtonStyle.Secondary).setEmoji('⚙️'),
-    new ButtonBuilder().setCustomId('sugpanel_view_thresholds').setLabel('Seuils auto').setStyle(ButtonStyle.Secondary).setEmoji('📊'),
-  );
-  const row4 = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('sugpanel_view_categories').setLabel('Catégories').setStyle(ButtonStyle.Secondary).setEmoji('🏷️'),
-    new ButtonBuilder().setCustomId('sugpanel_toggle_transcript').setLabel(config.transcriptEnabled ? 'Transcript: ON' : 'Transcript: OFF').setStyle(config.transcriptEnabled ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji('📄'),
-    new ButtonBuilder().setCustomId('sugpanel_refresh').setLabel('Actualiser').setStyle(ButtonStyle.Secondary).setEmoji('🔄'),
+    new ChannelSelectMenuBuilder().setCustomId('sugc_channel').setPlaceholder('📝 Salon des suggestions…').addChannelTypes(ChannelType.GuildText),
+    new ChannelSelectMenuBuilder().setCustomId('sugc_logchannel').setPlaceholder('📋 Salon des logs…').addChannelTypes(ChannelType.GuildText),
   );
 
-  return { embeds: [embed], components: [row1, row2, row3, row4] };
-}
-
-function panelBackRow() {
-  return new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('sugpanel_back').setLabel('↩️ Retour au panel').setStyle(ButtonStyle.Secondary),
-  );
-}
-
-function renderAntiAbuse(config) {
-  const embed = new EmbedBuilder()
-    .setColor(COLORS.info)
-    .setTitle('🕒 Anti-abus')
-    .addFields(
-      { name: 'Cooldown entre 2 suggestions', value: config.cooldownMinutes > 0 ? `${config.cooldownMinutes} minute(s)` : '*Désactivé*', inline: true },
-      { name: 'Rôle requis pour proposer', value: config.requiredRoleId ? `<@&${config.requiredRoleId}>` : '*Aucun (tout le monde)*', inline: true },
-    );
-  const row1 = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('sugpanel_modal_cooldown').setLabel('Définir le cooldown').setStyle(ButtonStyle.Primary).setEmoji('🕒'),
-    new ButtonBuilder().setCustomId('sugpanel_reset_role').setLabel('Retirer le rôle requis').setStyle(ButtonStyle.Danger).setEmoji('🔓').setDisabled(!config.requiredRoleId),
-  );
-  const row2 = new ActionRowBuilder().addComponents(
-    new RoleSelectMenuBuilder().setCustomId('sugpanel_role').setPlaceholder('🔒 Choisir le rôle requis...'),
-  );
-  return { embeds: [embed], components: [row1, row2, panelBackRow()] };
-}
-
-function renderFeatures(config) {
-  const embed = new EmbedBuilder()
-    .setColor(COLORS.info)
-    .setTitle('⚙️ Fonctionnalités')
-    .setDescription('Activez ou désactivez ces options en un clic.');
-  const row1 = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('sugpanel_toggle_anon').setLabel(`Suggestions anonymes : ${config.anonymousAllowed ? 'Autorisées' : 'Interdites'}`).setStyle(config.anonymousAllowed ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji('🕵️'),
-  );
-  const row2 = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('sugpanel_toggle_autothread').setLabel(`Fil de discussion auto : ${config.autoThread ? 'ON' : 'OFF'}`).setStyle(config.autoThread ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji('💬'),
-  );
-  const row3 = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('sugpanel_toggle_dmnotify').setLabel(`Notification DM auteur : ${config.dmNotify ? 'ON' : 'OFF'}`).setStyle(config.dmNotify ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji('📩'),
-  );
-  return { embeds: [embed], components: [row1, row2, row3, panelBackRow()] };
-}
-
-function renderThresholds(config) {
-  const embed = new EmbedBuilder()
-    .setColor(COLORS.info)
-    .setTitle('📊 Seuils d\'auto-modération')
-    .setDescription('Résout automatiquement une suggestion selon son solde de votes (👍 − 👎). Mettez 0 pour désactiver.')
-    .addFields(
-      { name: 'Auto-approbation', value: config.autoApproveAt > 0 ? `Dès **+${config.autoApproveAt}** votes nets` : '*Désactivée*', inline: true },
-      { name: 'Auto-refus',       value: config.autoDenyAt > 0 ? `Dès **-${config.autoDenyAt}** votes nets` : '*Désactivé*', inline: true },
-    );
-  const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('sugpanel_modal_thresholds').setLabel('Définir les seuils').setStyle(ButtonStyle.Primary).setEmoji('📊'),
-  );
-  return { embeds: [embed], components: [row, panelBackRow()] };
-}
-
-function renderCategories(config) {
-  const enabled = config.categoriesEnabled || [];
-  const embed = new EmbedBuilder()
-    .setColor(COLORS.info)
-    .setTitle('🏷️ Catégories')
-    .setDescription('Sélectionnez les catégories que les membres pourront choisir en proposant une suggestion.');
-  const menu = new StringSelectMenuBuilder()
-    .setCustomId('sugpanel_categories')
-    .setPlaceholder('🏷️ Choisir les catégories actives...')
-    .setMinValues(1)
-    .setMaxValues(CATEGORY_KEYS.length)
-    .addOptions(CATEGORY_KEYS.map(key => ({
-      label: CATEGORY_LABELS[key],
+  // Rangée 2 — types de logs avancés (multi-select, maxValues = nb de defaults)
+  const defaults = LOG_TYPE_KEYS.filter(k => isLogTypeEnabled(config, k));
+  const logsMenu = new StringSelectMenuBuilder()
+    .setCustomId('sugc_logtypes')
+    .setPlaceholder('🧾 Logs avancés — choisir les types relayés…')
+    .setMinValues(0)
+    .setMaxValues(Math.max(1, defaults.length))
+    .addOptions(LOG_TYPE_KEYS.map(key => ({
+      label: LOG_TYPE_LABELS[key] || key,
       value: key,
-      default: enabled.includes(key),
+      default: isLogTypeEnabled(config, key),
     })));
-  return { embeds: [embed], components: [new ActionRowBuilder().addComponents(menu), panelBackRow()] };
+  const row2 = new ActionRowBuilder().addComponents(logsMenu);
+
+  // Rangée 3 — statut + catégories + anti-abus + seuils
+  const row3 = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId('sugc_toggle_enabled').setLabel(config.enabled ? 'Désactiver le système' : 'Activer le système').setStyle(config.enabled ? ButtonStyle.Danger : ButtonStyle.Success).setEmoji('📢'),
+    new ButtonBuilder().setCustomId('sugc_categories').setLabel(`Catégories (${(config.categoriesEnabled || []).length})`).setStyle(ButtonStyle.Secondary).setEmoji('🏷️'),
+    new ButtonBuilder().setCustomId('sugc_antiabuse').setLabel('Anti-abus').setStyle(ButtonStyle.Secondary).setEmoji('🕒'),
+    new ButtonBuilder().setCustomId('sugc_thresholds').setLabel('Seuils auto').setStyle(ButtonStyle.Secondary).setEmoji('📊'),
+  );
+
+  // Rangée 4 — fonctionnalités
+  const row4 = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId('sugc_toggle_anon').setLabel(`Anonymat : ${config.anonymousAllowed ? 'ON' : 'OFF'}`).setStyle(config.anonymousAllowed ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji('🕵️'),
+    new ButtonBuilder().setCustomId('sugc_toggle_autothread').setLabel(`Fil auto : ${config.autoThread ? 'ON' : 'OFF'}`).setStyle(config.autoThread ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji('💬'),
+    new ButtonBuilder().setCustomId('sugc_toggle_dmnotify').setLabel(`DM auteur : ${config.dmNotify ? 'ON' : 'OFF'}`).setStyle(config.dmNotify ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji('📩'),
+  );
+
+  // Rangée 5 — transcript + actualiser
+  const row5 = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId('sugc_toggle_transcript').setLabel(`Transcript web : ${config.transcriptEnabled ? 'ON' : 'OFF'}`).setStyle(config.transcriptEnabled ? ButtonStyle.Success : ButtonStyle.Secondary).setEmoji('📄'),
+    new ButtonBuilder().setCustomId('sugc_refresh').setLabel('Actualiser').setStyle(ButtonStyle.Secondary).setEmoji('🔄'),
+  );
+
+  return { embeds: [embed], components: [row1, row2, row3, row4, row5] };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  STATISTIQUES EN TEMPS RÉEL
+//  STATISTIQUES
 // ═══════════════════════════════════════════════════════════════════════════
-async function renderStatsEmbed(guildId, guild, live = false) {
+async function renderStatsEmbed(guildId, guild) {
   const stats = await computeStats(guildId);
   const embed = new EmbedBuilder()
     .setColor(COLORS.primary)
-    .setTitle(`📊 Statistiques des Suggestions${live ? ' · 🔴 EN DIRECT' : ''}`)
-    .setThumbnail(guild.iconURL({ dynamic: true }))
+    .setTitle('📊 Statistiques des Suggestions')
+    .setThumbnail(guild?.iconURL?.({ dynamic: true }) ?? null)
     .addFields(
       { name: '💡 Total',      value: `${stats.total}`, inline: true },
       { name: '⏳ En attente',  value: `${stats.pending}`, inline: true },
       { name: '✅ Approuvées',  value: `${stats.approved}`, inline: true },
       { name: '❌ Refusées',    value: `${stats.denied}`, inline: true },
-      { name: '📈 Taux d\'approbation', value: `${stats.approvalRate}%`, inline: true },
+      { name: "📈 Taux d'approbation", value: `${stats.approvalRate}%`, inline: true },
       { name: '🗳️ Votes moyens/suggestion', value: `${stats.avgVotes}`, inline: true },
       { name: '📅 Suggestions — 7 derniers jours', value: renderBarChart(stats.last7Days), inline: false },
-    );
-
-  if (stats.topVoted.length) {
-    embed.addFields({
-      name: '🏆 Top suggestions',
-      value: stats.topVoted.map((s, i) => `**${i + 1}.** #${s.number} — 👍${s.upvotes} 👎${s.downvotes} *(${STATUS_LABELS[s.status]})*`).join('\n'),
-      inline: false,
-    });
-  }
-  if (stats.mostActive.length) {
-    embed.addFields({
-      name: '🙋 Membres les plus actifs',
-      value: stats.mostActive.map((a, i) => `**${i + 1}.** <@${a.userId}> — ${a.count} suggestion(s)`).join('\n'),
-      inline: false,
-    });
-  }
-
-  embed.setFooter({ text: live ? 'Actualisation automatique toutes les 5s' : 'Cliquez sur 🔴 pour activer le direct' }).setTimestamp();
+    )
+    .setTimestamp();
   return embed;
-}
-
-function statsRow(live) {
-  return new ActionRowBuilder().addComponents(
-    live
-      ? new ButtonBuilder().setCustomId('sugstats_stop').setLabel('⏹️ Arrêter le direct').setStyle(ButtonStyle.Danger)
-      : new ButtonBuilder().setCustomId('sugstats_live').setLabel('🔴 Activer le direct (90s)').setStyle(ButtonStyle.Danger),
-    new ButtonBuilder().setCustomId('sugstats_refresh').setLabel('🔄 Actualiser').setStyle(ButtonStyle.Secondary),
-  );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('suggestion')
-    .setDescription('💡 Système de suggestions avancé')
+    .setDescription('💡 Système de suggestions (v2)')
     .addSubcommand(s => s
       .setName('proposer')
       .setDescription('Proposer une suggestion')
@@ -331,10 +266,10 @@ module.exports = {
       .setDescription('Top 5 des suggestions les plus votées'))
     .addSubcommand(s => s
       .setName('stats')
-      .setDescription('Statistiques en temps réel du système de suggestions'))
+      .setDescription('Statistiques du système de suggestions'))
     .addSubcommand(s => s
-      .setName('panel')
-      .setDescription('Panel de configuration avancé (modérateurs)')),
+      .setName('config')
+      .setDescription('Panneau de configuration unique (modérateurs)')),
 
   async execute(interaction, client) {
     const sub   = interaction.options.getSubcommand();
@@ -344,7 +279,7 @@ module.exports = {
     if (sub === 'proposer') {
       const config = await SuggestionConfig.findOne({ guildId: guild.id });
       if (!config?.enabled || !config?.channelId) {
-        return interaction.reply({ embeds: [errorEmbed('Désactivé', 'Le système de suggestions n\'est pas configuré sur ce serveur.')], ephemeral: true });
+        return interaction.reply({ embeds: [errorEmbed('Désactivé', "Le système de suggestions n'est pas configuré sur ce serveur.")], ephemeral: true });
       }
 
       if (!checkRequiredRole(config, interaction.member.roles.cache.map(r => r.id))) {
@@ -377,8 +312,7 @@ module.exports = {
       if (!channel) return interaction.reply({ embeds: [errorEmbed('Erreur', 'Salon introuvable.')], ephemeral: true });
 
       const embed = buildSuggestionEmbed(suggestion, anonymous ? null : interaction.user, config);
-      const row   = buildVoteRow(suggestion, config);
-      const msg   = await channel.send({ embeds: [embed], components: [row] });
+      const msg   = await channel.send({ embeds: [embed], components: [buildVoteRow(suggestion, config), buildModRow(suggestion)] });
       suggestion.messageId = msg.id;
 
       if (config.autoThread && channel.threads) {
@@ -475,7 +409,7 @@ module.exports = {
     if (sub === 'top') {
       const stats = await computeStats(guild.id);
       if (!stats.topVoted.length) {
-        return interaction.reply({ embeds: [infoEmbed('Aucune suggestion', 'Il n\'y a pas encore de suggestion sur ce serveur.')], ephemeral: true });
+        return interaction.reply({ embeds: [infoEmbed('Aucune suggestion', "Il n'y a pas encore de suggestion sur ce serveur.")], ephemeral: true });
       }
       const embed = new EmbedBuilder()
         .setColor(COLORS.primary)
@@ -488,176 +422,249 @@ module.exports = {
       return interaction.reply({ embeds: [embed] });
     }
 
-    // ── STATS (temps réel) ──────────────────────────────────────────────────
+    // ── STATS ────────────────────────────────────────────────────────────────
     if (sub === 'stats') {
-      await interaction.deferReply();
-      const embed = await renderStatsEmbed(guild.id, guild, false);
-      const message = await interaction.editReply({ embeds: [embed], components: [statsRow(false)] });
-
-      const collector = message.createMessageComponentCollector({ filter: i => i.user.id === interaction.user.id, time: COLLECTOR_TIMEOUT_MS });
-      let liveInterval = null;
-      const stopLive = () => { if (liveInterval) { clearInterval(liveInterval); liveInterval = null; } };
-
-      collector.on('collect', async (i) => {
-        if (i.customId === 'sugstats_refresh') {
-          await i.update({ embeds: [await renderStatsEmbed(guild.id, guild, !!liveInterval)], components: [statsRow(!!liveInterval)] });
-          return;
-        }
-        if (i.customId === 'sugstats_stop') {
-          stopLive();
-          await i.update({ embeds: [await renderStatsEmbed(guild.id, guild, false)], components: [statsRow(false)] });
-          return;
-        }
-        if (i.customId === 'sugstats_live') {
-          await i.update({ embeds: [await renderStatsEmbed(guild.id, guild, true)], components: [statsRow(true)] });
-          stopLive();
-          const endAt = Date.now() + LIVE_STATS_DURATION_MS;
-          liveInterval = setInterval(async () => {
-            if (Date.now() >= endAt) { stopLive(); await interaction.editReply({ embeds: [await renderStatsEmbed(guild.id, guild, false)], components: [statsRow(false)] }).catch(() => {}); return; }
-            await interaction.editReply({ embeds: [await renderStatsEmbed(guild.id, guild, true)], components: [statsRow(true)] }).catch(() => {});
-          }, LIVE_STATS_INTERVAL_MS);
-        }
-      });
-
-      collector.on('end', () => { stopLive(); interaction.editReply({ components: [] }).catch(() => {}); });
-      return;
+      const embed = await renderStatsEmbed(guild.id, guild);
+      return interaction.reply({ embeds: [embed] });
     }
 
-    // ── PANEL ────────────────────────────────────────────────────────────────
-    if (sub === 'panel') {
+    // ── CONFIG (panneau unique) ─────────────────────────────────────────────
+    if (sub === 'config') {
       if (!isMod(interaction)) {
         return interaction.reply({ embeds: [errorEmbed('Permission refusée', 'Vous devez avoir la permission `Gérer le serveur`.')], ephemeral: true });
       }
 
-      let config = await getOrCreateConfig(guild.id);
-      const reply = await interaction.reply({ ...renderOverview(config), ephemeral: true, fetchReply: true });
+      const config = await getOrCreateConfig(guild.id);
+      const reply = await interaction.reply({ ...buildConfigPanel(config, client), ephemeral: true, fetchReply: true });
 
-      const collector = reply.createMessageComponentCollector({ filter: i => i.user.id === interaction.user.id, time: COLLECTOR_TIMEOUT_MS });
+      const collector = reply.createMessageComponentCollector({ filter: i => i.user.id === interaction.user.id, time: CONFIG_TIMEOUT_MS });
 
-      collector.on('collect', async (i) => {
-        const id = i.customId;
-        config = await getOrCreateConfig(guild.id);
-
-        // ── Navigation ──
-        if (id === 'sugpanel_back' || id === 'sugpanel_refresh') {
-          return i.update(renderOverview(config));
-        }
-        if (id === 'sugpanel_view_antiabuse') return i.update(renderAntiAbuse(config));
-        if (id === 'sugpanel_view_features')  return i.update(renderFeatures(config));
-        if (id === 'sugpanel_view_thresholds') return i.update(renderThresholds(config));
-        if (id === 'sugpanel_view_categories') return i.update(renderCategories(config));
-
-        // ── Salons ──
-        if (id === 'sugpanel_channel') {
-          config.channelId = i.values[0];
-          config.enabled = true;
-          await config.save();
-          await logAction({ client, guildId: guild.id, suggestionId: 'config', action: 'config_changed', actorId: i.user.id, detail: `Salon défini : <#${config.channelId}>` });
-          return i.update(renderOverview(config));
-        }
-        if (id === 'sugpanel_logchannel') {
-          config.logChannelId = i.values[0];
-          await config.save();
-          return i.update(renderOverview(config));
-        }
-
-        // ── Toggles simples ──
-        if (id === 'sugpanel_toggle_enabled') {
-          config.enabled = !config.enabled;
-          await config.save();
-          await logAction({ client, guildId: guild.id, suggestionId: 'config', action: 'config_changed', actorId: i.user.id, detail: config.enabled ? 'Système activé' : 'Système désactivé' });
-          return i.update(renderOverview(config));
-        }
-        if (id === 'sugpanel_toggle_transcript') {
-          config.transcriptEnabled = !config.transcriptEnabled;
-          await config.save();
-          return i.update(renderOverview(config));
-        }
-        if (id === 'sugpanel_toggle_anon') {
-          config.anonymousAllowed = !config.anonymousAllowed;
-          await config.save();
-          return i.update(renderFeatures(config));
-        }
-        if (id === 'sugpanel_toggle_autothread') {
-          config.autoThread = !config.autoThread;
-          await config.save();
-          return i.update(renderFeatures(config));
-        }
-        if (id === 'sugpanel_toggle_dmnotify') {
-          config.dmNotify = !config.dmNotify;
-          await config.save();
-          return i.update(renderFeatures(config));
-        }
-
-        // ── Anti-abus ──
-        if (id === 'sugpanel_role') {
-          config.requiredRoleId = i.values[0];
-          await config.save();
-          return i.update(renderAntiAbuse(config));
-        }
-        if (id === 'sugpanel_reset_role') {
-          config.requiredRoleId = null;
-          await config.save();
-          return i.update(renderAntiAbuse(config));
-        }
-        if (id === 'sugpanel_modal_cooldown') {
-          const modal = new ModalBuilder().setCustomId('sugpanel_modal_cooldown_submit').setTitle('Cooldown entre suggestions');
-          const input = new TextInputBuilder().setCustomId('minutes').setLabel('Minutes (0 = désactivé)').setStyle(TextInputStyle.Short).setRequired(true).setValue(String(config.cooldownMinutes || 0));
-          modal.addComponents(new ActionRowBuilder().addComponents(input));
-          return i.showModal(modal);
-        }
-
-        // ── Seuils ──
-        if (id === 'sugpanel_modal_thresholds') {
-          const modal = new ModalBuilder().setCustomId('sugpanel_modal_thresholds_submit').setTitle('Seuils d\'auto-modération');
-          const approve = new TextInputBuilder().setCustomId('auto_approve').setLabel('Auto-approbation (votes nets, 0=off)').setStyle(TextInputStyle.Short).setRequired(true).setValue(String(config.autoApproveAt || 0));
-          const deny = new TextInputBuilder().setCustomId('auto_deny').setLabel('Auto-refus (votes nets, 0=off)').setStyle(TextInputStyle.Short).setRequired(true).setValue(String(config.autoDenyAt || 0));
-          modal.addComponents(new ActionRowBuilder().addComponents(approve), new ActionRowBuilder().addComponents(deny));
-          return i.showModal(modal);
-        }
-
-        // ── Catégories ──
-        if (id === 'sugpanel_categories') {
-          config.categoriesEnabled = i.values;
-          await config.save();
-          return i.update(renderCategories(config));
-        }
-      });
+      // Le collecteur sert uniquement à maintenir le panneau actif et à retirer
+      // les composants après 10 min. Toutes les actions (sugc_*) sont routées de
+      // façon persistante par interactionCreate → handleButton / handleSelect.
+      collector.on('collect', () => {});
 
       collector.on('end', () => interaction.editReply({ components: [] }).catch(() => {}));
       return;
     }
   },
 
-  // ─── Modaux du panel ──────────────────────────────────────────────────────
-  async handleModal(interaction) {
+  // ─── Menus du panneau (persistants, routés par interactionCreate) ─────────
+  async handleSelect(interaction, client) {
     const id = interaction.customId;
-    const guild = interaction.guild;
-    const config = await getOrCreateConfig(guild.id);
+    const guildId = interaction.guild.id;
+    const config = await getOrCreateConfig(guildId);
 
-    if (id === 'sugpanel_modal_cooldown_submit') {
+    if (id === 'sugc_channel') {
+      config.channelId = interaction.values[0];
+      config.enabled = true;
+      await config.save();
+      await logAction({ client, guildId, suggestionId: 'config', action: 'config_changed', actorId: interaction.user.id, detail: `Salon défini : <#${config.channelId}>` });
+      return interaction.update(buildConfigPanel(config, client));
+    }
+    if (id === 'sugc_logchannel') {
+      config.logChannelId = interaction.values[0];
+      await config.save();
+      await logAction({ client, guildId, suggestionId: 'config', action: 'config_changed', actorId: interaction.user.id, detail: `Salon de logs défini : <#${config.logChannelId}>` });
+      return interaction.update(buildConfigPanel(config, client));
+    }
+    if (id === 'sugc_logtypes') {
+      // Menus multi : tout désélectionné → tout désactivé ; sinon seulement la sélection.
+      const selected = new Set(interaction.values);
+      const next = {};
+      for (const key of LOG_TYPE_KEYS) next[key] = selected.has(key);
+      config.logTypes = next;
+      await config.save();
+      await logAction({ client, guildId, suggestionId: 'config', action: 'config_changed', actorId: interaction.user.id, detail: 'Types de logs mis à jour' });
+      return interaction.update(buildConfigPanel(config, client));
+    }
+    if (id === 'sugc_categories') {
+      // Sélection vide = toutes les catégories actives (comportement par défaut).
+      config.categoriesEnabled = interaction.values.length ? interaction.values : [...CATEGORY_KEYS];
+      await config.save();
+      await logAction({ client, guildId, suggestionId: 'config', action: 'config_changed', actorId: interaction.user.id, detail: 'Catégories mises à jour' });
+      return interaction.update({ embeds: [successEmbed('Catégories mises à jour', `Catégories actives : ${config.categoriesEnabled.map(c => CATEGORY_LABELS[c] || c).join(', ')}`)], components: [] });
+    }
+  },
+
+  // ─── Boutons du panneau + modération persistante (routés par interactionCreate) ──
+  async handleButton(interaction, client) {
+    const id = interaction.customId;
+
+    // ── Modération persistante sur les messages publics ──
+    if (id.startsWith('sugm_approve_') || id.startsWith('sugm_deny_')) {
+      if (!isMod(interaction)) {
+        return interaction.reply({ embeds: [errorEmbed('Permission refusée', 'Vous devez avoir la permission `Gérer le serveur`.')], ephemeral: true });
+      }
+      const action = id.startsWith('sugm_approve_') ? 'approved' : 'denied';
+      const suggestionId = id.replace(id.startsWith('sugm_approve_') ? 'sugm_approve_' : 'sugm_deny_', '');
+      const suggestion = await Suggestion.findById(suggestionId);
+      if (!suggestion) return interaction.reply({ embeds: [errorEmbed('Introuvable', "Cette suggestion n'existe plus.")], ephemeral: true });
+      if (suggestion.status !== 'pending') {
+        return interaction.reply({ embeds: [errorEmbed('Déjà traitée', `Cette suggestion a déjà été ${STATUS_LABELS[suggestion.status].toLowerCase()}.`)], ephemeral: true });
+      }
+      if (suggestion.guildId !== interaction.guildId) {
+        return interaction.reply({ embeds: [errorEmbed('Erreur', 'Cette suggestion appartient à un autre serveur.')], ephemeral: true });
+      }
+
+      suggestion.status = action;
+      suggestion.resolvedAt = new Date();
+      suggestion.resolvedBy = interaction.user.id;
+      await suggestion.save();
+
+      const config = await getOrCreateConfig(interaction.guildId);
+      await refreshSuggestionMessage(interaction.client, suggestion, config);
+      await logAction({ client: interaction.client, guildId: interaction.guildId, suggestionId: suggestion._id, action, actorId: interaction.user.id, suggestionNumber: suggestion.number });
+      await notifyAuthor(interaction.client, suggestion, config, action === 'approved' ? '✅ Suggestion approuvée' : '❌ Suggestion refusée');
+
+      return interaction.reply({ embeds: [successEmbed('Suggestion traitée', `Suggestion **#${suggestion.number}** ${action === 'approved' ? 'approuvée' : 'refusée'} par <@${interaction.user.id}>.`)] });
+    }
+
+    if (id.startsWith('sugm_pin_')) {
+      if (!isMod(interaction)) {
+        return interaction.reply({ embeds: [errorEmbed('Permission refusée', 'Vous devez avoir la permission `Gérer le serveur`.')], ephemeral: true });
+      }
+      const suggestionId = id.replace('sugm_pin_', '');
+      const suggestion = await Suggestion.findById(suggestionId);
+      if (!suggestion) return interaction.reply({ embeds: [errorEmbed('Introuvable', "Cette suggestion n'existe plus.")], ephemeral: true });
+      if (suggestion.guildId !== interaction.guildId) {
+        return interaction.reply({ embeds: [errorEmbed('Erreur', 'Cette suggestion appartient à un autre serveur.')], ephemeral: true });
+      }
+
+      suggestion.pinned = !suggestion.pinned;
+      await suggestion.save();
+      const config = await getOrCreateConfig(interaction.guildId);
+      await refreshSuggestionMessage(interaction.client, suggestion, config);
+      await logAction({ client: interaction.client, guildId: interaction.guildId, suggestionId: suggestion._id, action: suggestion.pinned ? 'pinned' : 'unpinned', actorId: interaction.user.id, suggestionNumber: suggestion.number });
+
+      const author = suggestion.anonymous ? null : await interaction.client.users.fetch(suggestion.authorId).catch(() => null);
+      await interaction.update({ embeds: [buildSuggestionEmbed(suggestion, author, config)], components: [buildVoteRow(suggestion, config), buildModRow(suggestion)] });
+      return interaction.followUp({
+        embeds: [successEmbed(suggestion.pinned ? 'Suggestion épinglée' : 'Suggestion désépinglée', `Suggestion **#${suggestion.number}** mise à jour.`)],
+        ephemeral: true,
+      });
+    }
+
+    // ── Boutons du panneau de configuration ──
+    if (id === 'sugc_refresh') {
+      const config = await getOrCreateConfig(interaction.guildId);
+      return interaction.update(buildConfigPanel(config, interaction.client));
+    }
+
+    if (id === 'sugc_toggle_enabled') {
+      const config = await getOrCreateConfig(interaction.guildId);
+      config.enabled = !config.enabled;
+      await config.save();
+      await logAction({ client: interaction.client, guildId: interaction.guildId, suggestionId: 'config', action: 'config_changed', actorId: interaction.user.id, detail: config.enabled ? 'Système activé' : 'Système désactivé' });
+      return interaction.update(buildConfigPanel(config, interaction.client));
+    }
+
+    if (id === 'sugc_toggle_anon') {
+      const config = await getOrCreateConfig(interaction.guildId);
+      config.anonymousAllowed = !config.anonymousAllowed;
+      await config.save();
+      return interaction.update(buildConfigPanel(config, interaction.client));
+    }
+
+    if (id === 'sugc_toggle_autothread') {
+      const config = await getOrCreateConfig(interaction.guildId);
+      config.autoThread = !config.autoThread;
+      await config.save();
+      return interaction.update(buildConfigPanel(config, interaction.client));
+    }
+
+    if (id === 'sugc_toggle_dmnotify') {
+      const config = await getOrCreateConfig(interaction.guildId);
+      config.dmNotify = !config.dmNotify;
+      await config.save();
+      return interaction.update(buildConfigPanel(config, interaction.client));
+    }
+
+    if (id === 'sugc_toggle_transcript') {
+      const config = await getOrCreateConfig(interaction.guildId);
+      config.transcriptEnabled = !config.transcriptEnabled;
+      await config.save();
+      return interaction.update(buildConfigPanel(config, interaction.client));
+    }
+
+    if (id === 'sugc_antiabuse') {
+      const config = await getOrCreateConfig(interaction.guildId);
+      const modal = new ModalBuilder().setCustomId('sugm_modal_cooldown').setTitle('🕒 Anti-abus');
+      const minutes = new TextInputBuilder().setCustomId('minutes').setLabel('Cooldown en minutes (0 = désactivé)').setStyle(TextInputStyle.Short).setRequired(true).setValue(String(config.cooldownMinutes || 0));
+      const role = new TextInputBuilder().setCustomId('role_id').setLabel('ID du rôle requis (vide = tout le monde)').setStyle(TextInputStyle.Short).setRequired(false).setValue(config.requiredRoleId || '');
+      modal.addComponents(new ActionRowBuilder().addComponents(minutes), new ActionRowBuilder().addComponents(role));
+      return interaction.showModal(modal);
+    }
+
+    if (id === 'sugc_thresholds') {
+      const config = await getOrCreateConfig(interaction.guildId);
+      const modal = new ModalBuilder().setCustomId('sugm_modal_thresholds').setTitle("📊 Seuils d'auto-résolution");
+      const approve = new TextInputBuilder().setCustomId('auto_approve').setLabel('Auto-approbation (votes nets, 0 = off)').setStyle(TextInputStyle.Short).setRequired(true).setValue(String(config.autoApproveAt || 0));
+      const deny = new TextInputBuilder().setCustomId('auto_deny').setLabel('Auto-refus (votes nets, 0 = off)').setStyle(TextInputStyle.Short).setRequired(true).setValue(String(config.autoDenyAt || 0));
+      modal.addComponents(new ActionRowBuilder().addComponents(approve), new ActionRowBuilder().addComponents(deny));
+      return interaction.showModal(modal);
+    }
+
+    // Bouton catégories → réutilise le menu persistant sugc_categories via un message éphémère
+    if (id === 'sugc_categories') {
+      const config = await getOrCreateConfig(interaction.guildId);
+      const menu = new StringSelectMenuBuilder()
+        .setCustomId('sugc_categories')
+        .setPlaceholder('🏷️ Choisir les catégories actives…')
+        .setMinValues(0)
+        .setMaxValues(CATEGORY_KEYS.length)
+        .addOptions(CATEGORY_KEYS.map(key => ({ label: CATEGORY_LABELS[key], value: key, default: (config.categoriesEnabled || []).includes(key) })));
+      return interaction.reply({
+        embeds: [infoEmbed('🏷️ Catégories', 'Sélectionnez les catégories que les membres pourront choisir en proposant une suggestion. Tout désélectionner = toutes actives.')],
+        components: [new ActionRowBuilder().addComponents(menu)],
+        ephemeral: true,
+      });
+    }
+  },
+
+  // ─── Modaux anti-abus et seuils (persistants, routés par interactionCreate) ──
+  async handleModal(interaction, client) {
+    const id = interaction.customId;
+    const guildId = interaction.guild.id;
+    const config = await getOrCreateConfig(guildId);
+
+    if (id === 'sugm_modal_cooldown') {
+      if (!isMod(interaction)) {
+        return interaction.reply({ embeds: [errorEmbed('Permission refusée', 'Vous devez avoir la permission `Gérer le serveur`.')], ephemeral: true });
+      }
       const raw = interaction.fields.getTextInputValue('minutes').trim();
       const minutes = parseInt(raw, 10);
       if (isNaN(minutes) || minutes < 0 || minutes > 10080) {
         return interaction.reply({ embeds: [errorEmbed('Valeur invalide', 'Entrez un nombre de minutes entre 0 et 10080 (7 jours).')], ephemeral: true });
       }
+      let roleRaw = (interaction.fields.getTextInputValue('role_id') || '').trim();
+      let roleId = null;
+      if (roleRaw) {
+        const m = roleRaw.match(/^<@&(\d+)>$/) || roleRaw.match(/^(\d{17,20})$/);
+        if (!m) return interaction.reply({ embeds: [errorEmbed('Rôle invalide', 'Fournissez un ID de rôle (17–20 chiffres) ou une mention <@&…>.')], ephemeral: true });
+        roleId = m[1];
+      }
       config.cooldownMinutes = minutes;
+      config.requiredRoleId = roleId;
       await config.save();
-      return interaction.update(renderAntiAbuse(config)).catch(() => interaction.reply({ embeds: [successEmbed('Cooldown mis à jour')], ephemeral: true }));
+      await logAction({ client, guildId, suggestionId: 'config', action: 'config_changed', actorId: interaction.user.id, detail: `Anti-abus : cooldown ${minutes} min, rôle ${roleId ? `<@&${roleId}>` : 'aucun'}` });
+      return interaction.reply({ embeds: [successEmbed('Anti-abus mis à jour', `Cooldown : **${minutes} min** · Rôle requis : ${roleId ? `<@&${roleId}>` : '*aucun*'}`)], ephemeral: true });
     }
 
-    if (id === 'sugpanel_modal_thresholds_submit') {
-      const rawApprove = interaction.fields.getTextInputValue('auto_approve').trim();
-      const rawDeny    = interaction.fields.getTextInputValue('auto_deny').trim();
-      const approve = parseInt(rawApprove, 10);
-      const deny    = parseInt(rawDeny, 10);
-      if (isNaN(approve) || isNaN(deny) || approve < 0 || deny < 0) {
+    if (id === 'sugm_modal_thresholds') {
+      if (!isMod(interaction)) {
+        return interaction.reply({ embeds: [errorEmbed('Permission refusée', 'Vous devez avoir la permission `Gérer le serveur`.')], ephemeral: true });
+      }
+      const approve = parseInt(interaction.fields.getTextInputValue('auto_approve').trim(), 10);
+      const deny = parseInt(interaction.fields.getTextInputValue('auto_deny').trim(), 10);
+      if (isNaN(approve) || isNaN(deny) || approve < 0 || deny < 0 || approve > 100000 || deny > 100000) {
         return interaction.reply({ embeds: [errorEmbed('Valeur invalide', 'Entrez des nombres entiers positifs (0 pour désactiver).')], ephemeral: true });
       }
       config.autoApproveAt = approve;
       config.autoDenyAt = deny;
       await config.save();
-      return interaction.update(renderThresholds(config)).catch(() => interaction.reply({ embeds: [successEmbed('Seuils mis à jour')], ephemeral: true }));
+      await logAction({ client, guildId, suggestionId: 'config', action: 'config_changed', actorId: interaction.user.id, detail: `Seuils : auto-approuve ≥ +${approve}, auto-refuse ≤ -${deny}` });
+      return interaction.reply({ embeds: [successEmbed('Seuils mis à jour', `Auto-approbation : **≥ +${approve}** · Auto-refus : **≤ -${deny}** votes nets.`)], ephemeral: true });
     }
   },
 
@@ -665,10 +672,10 @@ module.exports = {
   async handleVote(interaction, suggestionId, type) {
     const suggestion = await Suggestion.findById(suggestionId);
     if (!suggestion) {
-      return interaction.reply({ embeds: [errorEmbed('Introuvable', 'Cette suggestion n\'existe plus.')], ephemeral: true });
+      return interaction.reply({ embeds: [errorEmbed('Introuvable', "Cette suggestion n'existe plus.")], ephemeral: true });
     }
     if (suggestion.status !== 'pending') {
-      return interaction.reply({ embeds: [errorEmbed('Clôturée', 'Cette suggestion n\'accepte plus de votes.')], ephemeral: true });
+      return interaction.reply({ embeds: [errorEmbed('Clôturée', "Cette suggestion n'accepte plus de votes.")], ephemeral: true });
     }
 
     const result = applyVote(suggestion, interaction.user.id, type);
@@ -697,7 +704,7 @@ module.exports = {
     }
 
     const author = suggestion.anonymous ? null : await interaction.client.users.fetch(suggestion.authorId).catch(() => null);
-    await interaction.update({ embeds: [buildSuggestionEmbed(suggestion, author, config)], components: [buildVoteRow(suggestion, config)] });
+    await interaction.update({ embeds: [buildSuggestionEmbed(suggestion, author, config)], components: [buildVoteRow(suggestion, config), buildModRow(suggestion)] });
     return interaction.followUp({
       embeds: [successEmbed('Vote enregistré !', `Tu as ${type === 'up' ? '👍 approuvé' : '👎 refusé'} cette suggestion${result.switched ? ' (vote modifié)' : ''}.`)],
       ephemeral: true,
